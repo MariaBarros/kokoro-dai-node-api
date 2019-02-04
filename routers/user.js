@@ -1,20 +1,20 @@
 /*------------------------------------------------------**
-** Dependencies - Models                                **
+** Dependencies - Controllers                           **
 **------------------------------------------------------*/
-let User = require('../models/user');
-let userController = require('../controllers/user');
+let userCtrl = require('../controllers/user');
+let tokenCtrl = require('../controllers/token');
 
 /*------------------------------------------------------**
 ** Define the users handlers                            **
 **------------------------------------------------------*/
 const userHandlers = {
   users: function(req,callback){    
-    if(User.getAvailableMethods().indexOf(req.method) > -1){
-      let data = (req.method == "post" || req.method == "put") ? JSON.parse(req.payload) : req.queryStringObject;
-      userHandlers[req.method](data,callback);
-    } else {
+    if(userCtrl.getAvailableMethods(req.method)){
+      let data = (req.method == "post" || req.method == "put") ? JSON.parse(req.payload) : req.queryStringObject;      
+      // Send data, headers and callback function to available user's methods
+      userHandlers[req.method](data, req.headers, callback);      
+    } else
       callback(405);
-    }
   }
 };
 
@@ -23,25 +23,45 @@ const userHandlers = {
 **------------------------------------------------------**
 * @param {Object} data: user data                       **
 **------------------------------------------------------*/
-userHandlers.post = function(data, callback){
-  userController.update(data, callback);
+userHandlers.post = function(data, headers, callback){
+  if(!data.id)
+    userCtrl.update(data, callback);
+  else
+    callback(true, {message: "You cannot create a user sending data with an id property"})
 };
 
 /*------------------------------------------------------**
 ** Handler for getting data for one or more users       **
 **------------------------------------------------------**
 * @param {Object} data: Info about the request Object   **
-*   - data.queryStringObject.id: user's id (optional)   **
+*   - data.id: get user by id (optional)                **
 **------------------------------------------------------*/
-userHandlers.get = function(data,callback){
-  // Checking the queryStringObject for id
-  let id = typeof(data.id) == 'string' ? data.id.trim() : false;
-  if(id){    
+userHandlers.get = function(data, headers, callback){
+  // Checking the queryStringObject for id and the token header
+  let id = typeof(data.id) == 'string' ? data.id.trim() : false,
+    token = headers.token && typeof(headers.token) == 'string' ? headers.token.trim() : false;
+
+  if(id && token){        
     // Getting data of a particular user
-    userController.getOne(id, callback);    
-  } else {
-    // Getting the users collection
-    userController.getAll(data, callback);    
+    tokenCtrl.getOne(id, function(err, tokenData){
+      if(!err && tokenData.tokenId == token && tokenData.expires > Date.now())
+        userCtrl.getOne(id, callback);
+      else{
+        if(!err){
+          if(tokenData.tokenId != token)
+            callback(true, {message: `Incorrect Token ${token}`})
+          else
+            callback(true, {message: `The Token ${token} has expired`})
+        }else
+          callback(true, {message: `The Token ${token} does not exist`});
+      }
+    });          
+  }else{
+    if(!id)
+      // Getting the users collection
+      userCtrl.getAll(data, callback); 
+    else      
+      callback(true, {message: "Access denied: you need a valid token for this action"});         
   }
 };
 
@@ -50,8 +70,15 @@ userHandlers.get = function(data,callback){
 **------------------------------------------------------**
 * @param {Object} data: user data                       **
 **------------------------------------------------------*/
-userHandlers.put = function(data,callback){
-  userController.update(data, callback);
+userHandlers.put = function(data, headers, callback){
+  let token = headers.token && typeof(headers.token) == 'string' ? headers.token.trim() : false;
+  if(token){
+    if(!data.id)
+      callback(true, {message: "Missing field id for update the user"})
+    else
+      userCtrl.update(data, callback);
+  }else
+    callback(true, {message: "Access denied: you need a valid token for this action"});
 };
 
 /*------------------------------------------------------**
@@ -60,14 +87,17 @@ userHandlers.put = function(data,callback){
 * @param {Object} data: Info about the request Object   **
 *   - data.queryStringObject.id: user's id (required)   **
 **------------------------------------------------------*/
-userHandlers.delete = function(data,callback){
+userHandlers.delete = function(data, headers, callback){
   // Check that phone number is valid
   let id = typeof(data.id) == 'string' ? data.id.trim() : false;
-  if(id){
-    userController.delete(id, callback);
-  } else {
-    callback(400,{'Error' : "Missing id: the user's id is required"});
-  }
+  let token = headers.token && typeof(headers.token) == 'string' ? headers.token.trim() : false;
+  if(token){
+    if(id)
+      userCtrl.delete(id, callback);
+    else
+      callback(true,{'Error' : "Missing id: the user's id is required"});
+  }else
+    callback(true, {message: "Access denied: you need a valid token for this action"});
 };
 
 // Export the handlers for users

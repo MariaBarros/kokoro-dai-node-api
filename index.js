@@ -3,16 +3,26 @@
 **------------------------------------------------------*/
 
 // Dependencies
-var http = require('http'),  
-  config = require('./config/'),
-  server = require('./server');  
+const server = require('./server');  
+const workers = require('./workers');
 
- // Instantiate the HTTP server
-var httpServer = http.createServer(function(req,res){
-  server.requestHandler(req,res);  
-});
 
-// Start the HTTP server
-httpServer.listen(config.httpPort,function(){
-  console.log('The HTTP server is running on port '+config.httpPort);
-});
+const app = {};
+
+// Init function
+app.init = function(){
+
+  // Start the server
+  server.init();
+
+  // Start the workers
+  workers.init();
+
+};
+
+// Self executing
+app.init();
+
+
+// Export the app
+module.exports = app;

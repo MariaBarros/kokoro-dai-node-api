@@ -1,7 +1,7 @@
 /*------------------------------------------------------**
 ** Dependencies - Helpers                               **
 **------------------------------------------------------*/
-const stringHelper = require('../helpers/index');
+const helpers = require('../helpers/index');
 
 
 /*------------------------------------------------------**
@@ -9,11 +9,20 @@ const stringHelper = require('../helpers/index');
 **------------------------------------------------------*/
 class User{
   constructor(firstName, lastName, username, password, role){
-    this.firstName = stringHelper.isNotEmptyString(firstName) ? firstName.trim() : false;
-    this.lastName = stringHelper.isNotEmptyString(lastName) ? lastName.trim() : false;
-    this.username = stringHelper.isNotEmptyString(username) ? username.trim() : false;
-    this.password = stringHelper.isNotEmptyString(password) ? password.trim() : false;
-    this.role = stringHelper.isNotEmptyString(role) ? role.trim() : false;
+    this.firstName = helpers.isNotEmptyString(firstName) ? firstName.trim() : false;
+    this.lastName = helpers.isNotEmptyString(lastName) ? lastName.trim() : false;
+    this.username = helpers.isNotEmptyString(username) ? username.trim() : false;
+    this.password = helpers.isNotEmptyString(password) ? password.trim() : false;
+    this.role = helpers.isNotEmptyString(role) ? role.trim() : false;
+  }
+
+  setId(){
+    return helpers.hash(this.username + this.password);
+  }
+
+  setPassword(){
+    if(this.password.length < 20) 
+      this.password = helpers.hash(this.password);
   }
 
   hasRequiredProperties(){
