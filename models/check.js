@@ -14,25 +14,21 @@ class Check{
   }
 
   static hasRequiredProperties(data){
-    return Check.isValidId(data.id) 
-          && Check.isValidPhone(data.userPhone) 
+    return Check.isValidUserId(data.userId) 
           && Check.isValidProtocol(data.protocol)
           && helpers.isNotEmptyString(data.url) 
           && Check.isValidMethod(data.method)
-          && helpers.isObject(data.successCodes) && helpers.isNotEmptyArray(data.successCodes)
+          && helpers.isObject(data.successCodes) && data.successCodes instanceof Array && data.successCodes.length>0
           && helpers.isInt(data.timeoutSeconds)  && data.timeoutSeconds >= 1 && data.timeoutSeconds <= 5 
           && typeof(data.lastChecked) == 'number' && data.lastChecked > 0;
-
-  // If all checks pass, pass the data along to the next step in the process
-   return id && userPhone && protocol && url && method && successCodes && timeoutSeconds;
-  }  
-
-  static isValidId(id){
-    return helpers.isNotEmptyString(id) && id.trim().length == 20;
   }
 
-  static isValidPhone(phone){
-    return helpers.isNotEmptyString(phone) && phone.trim().length == 10 ? phone.trim() : false;
+  setId(){
+    return helpers.createRandomString(this.username + this.password);
+  }
+
+  static isValidUserId(userId){
+    return helpers.isNotEmptyString(userId) && userId.trim().length > 0;
   }
 
   static isValidProtocol(protocol){
@@ -41,6 +37,10 @@ class Check{
 
   static isValidMethod(method){
     return helpers.isNotEmptyString(method) && helpers.contain(['post','get','put','delete'], method);
+  }
+
+  static getAvailableMethods(){
+    return ['post','get','put','delete']
   }
 
   static getDataSource(){

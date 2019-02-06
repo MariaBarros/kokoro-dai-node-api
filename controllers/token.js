@@ -74,7 +74,7 @@ tokenCtrl.delete = function(id,callback){
 ** Updating the token data                              **
 **------------------------------------------------------*/
 tokenCtrl.update = function(tokenData, callback){
-  if(Token.isValidToken(tokenData.expires)){
+  if(tokenData.expires > Date.now()){
     // Set the expiration an hour from now
     tokenData.expires = Token.updateTokenExpires();
     // Store the new updates
@@ -88,13 +88,18 @@ tokenCtrl.update = function(tokenData, callback){
     callback(400,{"Error" : "The token has already expired, and cannot be extended."});
 }
 
-tokenCtrl.verify = function(token, callback){
-  // Lookup the token
-  this.getOne(token, function(err, tokenData){
-    if(!err){            
-      callback(false);      
-    }else
-    callback(true, tokenData);
+tokenCtrl.verifyToken = function(userId, token, callback){
+  // Lookup the token by user's id
+  this.getOne(userId, function(err, tokenData){    
+    if(!err && tokenData.tokenId == token && tokenData.expires > Date.now()){            
+      callback(false, {});      
+    }else{
+      if(!err){
+        let errorMessage = (tokenData.tokenId != token) ? `Invalid Token ${token}` : `The Token ${token} has expired`;
+        callback(true, {message: errorMessage});
+      }else
+        callback(true, {message: `The Token ${token} does not exist`});      
+    }
   });  
 }
 

@@ -58,7 +58,7 @@ helpers.isNotEmptArray = function(value){
     return value instanceof  Array && value.length > 1;
 };
 
-helpers.contain = function(value, options){
+helpers.contain = function(options, value){
   return options.indexOf(value) > -1;
 }
 

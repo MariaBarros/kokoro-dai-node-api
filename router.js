@@ -1,8 +1,9 @@
 /*------------------------------------------------------**
 ** Dependencies - Handlers                              **
 **------------------------------------------------------*/
-const _userHandlers = require('./routers/user');
-const _tokenHandlers = require('./routers/token');
+const _user = require('./routers/user');
+const _token = require('./routers/token');
+const _check = require('./routers/check');
 
 const errorHandlers = {
   notFound: function(data, response) {
@@ -11,8 +12,9 @@ const errorHandlers = {
 };
 
 const routerPaths = {
-  'users': _userHandlers.users,
-  'tokens': _tokenHandlers.tokens  
+  'users': _user.handlers,
+  'tokens': _token.handlers,
+  'checks': _check.handlers
 };
 
 const router = {};

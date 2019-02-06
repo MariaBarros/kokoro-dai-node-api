@@ -22,10 +22,6 @@ class Token{
     this.tokenId = helpers.createRandomString(20);
     // Set an expiration date 1 hour in the future.
     this.expires = Date.now() + 1000 * 60 * 60;
-  }  
-
-  static isValidToken(expires){
-    return helpers.graterThanToday(expires);
   }
 
   static updateTokenExpires(){

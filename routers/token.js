@@ -1,15 +1,15 @@
 /*------------------------------------------------------**
 ** Dependencies - Controllers & helpers                 **
 **------------------------------------------------------*/
-let tokenCtrl = require('../controllers/token');
-const stringHelper = require('../helpers/index');
+let _tokenCtrl = require('../controllers/token');
+const helpers = require('../helpers/index');
 
 /*------------------------------------------------------**
 ** Define the users handlers                            **
 **------------------------------------------------------*/
 const tokenHandlers = {
-  tokens: function(req,callback){    
-    if(tokenCtrl.getAvailableMethods().indexOf(req.method) > -1){
+  handlers: function(req,callback){    
+    if(_tokenCtrl.getAvailableMethods().indexOf(req.method) > -1){
       let data = (req.method == "post" || req.method == "put") ? JSON.parse(req.payload) : req.queryStringObject;
       _tokens[req.method](data,callback);
     } else {
@@ -27,10 +27,11 @@ _tokens  = {};
 * @param {Object} data: user's id & password            **
 **------------------------------------------------------*/
 _tokens.post = function(data, callback){
-  let password = stringHelper.isNotEmptyString(data.password) ? data.password.trim() : false;
-  let userId = stringHelper.isNotEmptyString(data.userId) ? data.userId.trim() : false;
+  let password = helpers.isNotEmptyString(data.password) ? data.password.trim() : false;
+  let userId = helpers.isNotEmptyString(data.userId) ? data.userId.trim() : false;
+
   if(userId && password){
-    tokenCtrl.create(data, callback);  
+    _tokenCtrl.create(data, callback);  
   }else{
     callback(400,{'Error' : "Missing userId & password: the user's id & password are required"});
   }
@@ -46,7 +47,7 @@ _tokens.get = function(data,callback){
   // Checking the toke's id  
   if(stringHelper.isNotEmptyString(data.id)){    
     // Getting data of a particular token
-    tokenCtrl.getOne(data.id.trim(), callback);    
+    _tokenCtrl.getOne(data.id.trim(), callback);    
   } else {
     callback(400,{'Error' : "Missing id: the token's id is required"});
   }
@@ -58,14 +59,14 @@ _tokens.get = function(data,callback){
 * @param {Object} data: token's id & extends            **
 **------------------------------------------------------*/
 _tokens.put = function(data, callback){
-  let id = stringHelper.isNotEmptyString(data.id) && data.id.trim().length == 20 ? data.id.trim() : false;
+  let id = helpers.isNotEmptyString(data.id) && data.id.trim().length >= 20 ? data.id.trim() : false;
   let extend = typeof(data.extend) == 'boolean' && data.extend == true ? true : false;
   if(id && extend){
     // Lookup the existing token
-    tokenCtrl.getOne(id, function(err, tokenData){
+    _tokenCtrl.getOne(id, function(err, tokenData){
       if(!err){
         // Check to make sure the token isn't already expired
-        tokenCtrl.update(tokenData, callback);
+        _tokenCtrl.update(tokenData, callback);
       }else
         callback(400, err);
     });    
@@ -84,7 +85,7 @@ _tokens.delete = function(data,callback){
   // Check that phone number is valid
   let id = typeof(data.id) == 'string' ? data.id.trim() : false;
   if(id){
-    tokenCtrl.delete(id, callback);
+    _tokenCtrl.delete(id, callback);
   } else {
     callback(400,{'Error' : "Missing id: the user's id is required"});
   }

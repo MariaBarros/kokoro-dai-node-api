@@ -1,28 +1,29 @@
 /*------------------------------------------------------**
 ** Dependencies - Models & Data                         **
 **------------------------------------------------------*/
-let User = require('../models/user');
+let _User = require('../models/user');
 let _store = require('../controllers/data');
 
 const userController = {};
 
 userController.getAvailableMethods = function(method){
-  return User.getAvailableMethods().indexOf(method) > -1;
+  return _User.getAvailableMethods().indexOf(method) > -1;
 }
+
 /*------------------------------------------------------**
 ** Get all users                                        **
 **------------------------------------------------------**
 * @param {Object} data: Info about the request Object   **
 **------------------------------------------------------*/
 userController.getAll = function(filters, callback){
-  let users = [];
-  _store.list(User.getDataSource(), function(err, usersFiles){
+  let users = [], userDataSource = _User.getDataSource();
+  _store.list(userDataSource, function(err, usersFiles){
     if(!err){
       if(usersFiles.length == 0)   
         callback(false, users);
       else{
         for ( let i = 0, length = usersFiles.length - 1; i <= length; i++) {
-          _store.read(User.getDataSource(), usersFiles[i], function(err, user){
+          _store.read(userDataSource, usersFiles[i], function(err, user){
             if(!err){
               delete user.password;
               users.push(user);
@@ -43,7 +44,7 @@ userController.getAll = function(filters, callback){
 * @param {String} id: user's id                         **
 **------------------------------------------------------*/
 userController.getOne = function(id, callback){    
-  _store.read(User.getDataSource(), id, function(err, user){
+  _store.read(_User.getDataSource(), id, function(err, user){
     if(err)
       callback(true, {message: "The user doesn't exist"});
     else{      
@@ -62,7 +63,7 @@ userController.getOne = function(id, callback){
 **------------------------------------------------------*/
 userController.update = function(userData, callback){
   // Set user data and check for required field  
-  let user = new User(userData.firstName, userData.lastName, userData.username, userData.password, userData.role);  
+  let user = new _User(userData.firstName, userData.lastName, userData.username, userData.password, userData.role);  
   user.setPassword();
   if(user.hasRequiredProperties()){
     if(userData.id){
@@ -76,7 +77,7 @@ userController.update = function(userData, callback){
     }else{
       // Create a new user
       user.id = user.setId();
-      _store.create(User.getDataSource(), user.id, user, function(err){
+      _store.create(_User.getDataSource(), user.id, user, function(err){
         if(!err)
           callback(false,{message : `The new user ${user.username} was created`});
         else 
@@ -93,7 +94,7 @@ userController.update = function(userData, callback){
 * @param {String} id: user's id (required)              **
 **------------------------------------------------------*/
 userController.delete = function(id,callback){  
-  _store.delete(User.getDataSource(), id, function(err){
+  _store.delete(_User.getDataSource(), id, function(err){
     if(!err)
       callback(false, {message: `The user ${id} was deleted`});
     else
