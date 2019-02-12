@@ -9,7 +9,7 @@ const helpers = require('../helpers/index');
 **------------------------------------------------------*/
 class Article{
   constructor(properties){
-    let {id, description, price, ...} = properties;
+    let {id, description, price, ...restProperties} = properties;
 
     properties.forEach(function (property){
       this[property[0]] = property[1];
@@ -29,4 +29,4 @@ class Article{
 }
 
 // Export the User Model
-module.exports = User;
+module.exports = Article;

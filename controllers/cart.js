@@ -1,7 +1,7 @@
 /*------------------------------------------------------**
 ** Dependencies - Models & Data                         **
 **------------------------------------------------------*/
-let Cart = require('../models/transaction');
+let Cart = require('../models/cart');
 let _store = require('../controllers/data');
 
 const cartController = {};
@@ -10,20 +10,23 @@ cartController.getAvailableMethods = function(method){
   return Cart.getAvailableMethods().indexOf(method) > -1;
 }
 
-cartController.create = function (clientId, secret, item, callback){
-   let cart = new Transaction(clientId, secret, item);
+cartController.create = function (data, callback){
+   let clientId= data.clientId;
+   let secret= data.secret;
+   let item= data.item;
+   let cart = new Cart(clientId, secret, item);
    callback(cart);
 }
 
-cartController.update = function (transaction, item, callback){
+cartController.update = function (cart, item, callback){
   if(item.hasProperty("remove")){
-      transaction.removeItem(item);
-      callback(transaction);
+      cart.removeItem(item);
+      callback(cart);
   }
   else{
     if(item.hasProperty("add")){
-      transaction.setItem(item);
-      callback(transaction);
+      cart.setItem(item);
+      callback(cart);
     }
   }
 }
@@ -67,8 +70,8 @@ cartController.update = function(userData, callback){
 ** Handler for deleting a user                          **
 **------------------------------------------------------**
 * @param {String} id: user's id (required)              **
-**------------------------------------------------------*/
-userController.delete = function(id,callback){
+**------------------------------------------------------
+cartController.delete = function(id,callback){
   _store.delete(User.getDataSource(), id, function(err){
     if(!err)
       callback(false, {message: `The user ${id} was deleted`});
@@ -76,6 +79,6 @@ userController.delete = function(id,callback){
       callback(true, {message: `Error when trying to delete the user ${id}`})
   });
 };
-
+*/
 // Export the handlers for users
-module.exports = userController;
+module.exports = cartController;
