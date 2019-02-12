@@ -31,6 +31,7 @@ _tokens.post = function(data, callback){
   let userId = helpers.isNotEmptyString(data.userId) ? data.userId.trim() : false;
 
   if(userId && password){
+    // Response a new token object, otherwise error
     _tokenCtrl.create(data, callback);  
   }else{
     callback(400,{'Error' : "Missing userId & password: the user's id & password are required"});
@@ -44,10 +45,15 @@ _tokens.post = function(data, callback){
 *   - data.queryStringObject.id: token's id             **
 **------------------------------------------------------*/
 _tokens.get = function(data,callback){
-  // Checking the toke's id  
-  if(stringHelper.isNotEmptyString(data.id)){    
+  // Checking the token's id  
+  if(helpers.isNotEmptyString(data.id)){    
     // Getting data of a particular token
-    _tokenCtrl.getOne(data.id.trim(), callback);    
+    _tokenCtrl.getOne(data.id.trim(), function(err, tokenData){
+      if(!err && tokenData)
+        callback(false, tokenData);
+      else
+        callback(404, err);
+    });    
   } else {
     callback(400,{'Error' : "Missing id: the token's id is required"});
   }
@@ -66,9 +72,14 @@ _tokens.put = function(data, callback){
     _tokenCtrl.getOne(id, function(err, tokenData){
       if(!err){
         // Check to make sure the token isn't already expired
-        _tokenCtrl.update(tokenData, callback);
+        _tokenCtrl.update(tokenData, function(err, updatedToken){
+          if(!err)
+            callback(false, updatedToken);
+          else
+            callback(true, err);
+        });
       }else
-        callback(400, err);
+        callback(404, err);
     });    
   } else {
     callback(400,{"Error": "Missing required field(s) or field(s) are invalid."});
@@ -76,20 +87,25 @@ _tokens.put = function(data, callback){
 };
 
 /*------------------------------------------------------**
-** Handler for deleting a user                          **
+** Handler for deleting a token                         **
 **------------------------------------------------------**
 * @param {Object} data: Info about the request Object   **
-*   - data.queryStringObject.id: user's id (required)   **
+*   - data.queryStringObject.id: token's id (required)  **
 **------------------------------------------------------*/
 _tokens.delete = function(data,callback){
-  // Check that phone number is valid
+  // Check that id is valid
   let id = typeof(data.id) == 'string' ? data.id.trim() : false;
   if(id){
-    _tokenCtrl.delete(id, callback);
+    _tokenCtrl.getOne(id, function(err, tokenData){
+      if(!err && tokenData)
+        _tokenCtrl.delete(id, callback);
+      else
+        callback(404, err);
+    });    
   } else {
     callback(400,{'Error' : "Missing id: the user's id is required"});
   }
 };
 
-// Export the handlers for users
+// Export the handlers for tokens
 module.exports = tokenHandlers;
