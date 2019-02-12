@@ -1,81 +1,97 @@
 /*------------------------------------------------------**
 ** Dependencies - Models & Data                         **
 **------------------------------------------------------*/
-let Cart = require('../models/transaction');
+let _Cart = require('../models/cart');
 let _store = require('../controllers/data');
+let helpers = require('../helpers/index');
 
 const cartController = {};
 
 cartController.getAvailableMethods = function(method){
-  return Cart.getAvailableMethods().indexOf(method) > -1;
+  return _Cart.getAvailableMethods().indexOf(method) > -1;
 }
 
 cartController.create = function (clientId, secret, item, callback){
-   let cart = new Transaction(clientId, secret, item);
+   let cart = new Cart(clientId, secret, item);
    callback(cart);
 }
 
-cartController.update = function (transaction, item, callback){
-  if(item.hasProperty("remove")){
-      transaction.removeItem(item);
-      callback(transaction);
+cartController.update = function (cartTransaction, callback){
+  if(cartTransaction.hasOwnProperty("clientId") && cartTransaction.hasOwnProperty("secret")){
+
+    // Create a new cart if cart.Id doesn´t exists
+    if(!cartTransaction.id){ 
+      let cart = new _Cart(cartTransaction.clientId, cartTransaction.secret, cartTransaction.item);
+      if(cart.hasRequiredProperties()){
+        cart.id = cart.setId();     
+        _store.create(_Cart.getDataSource(), cart.id, cart, function(err){
+          if(!err)
+            callback(false,{message : `The new cart for client ${cart.clientId} was created`});
+          else 
+            callback(true,{message: err}); 
+        });
+      }
+      else{
+        callback(true,{'message' : 'Missing data for update.'});
+      }
+    }
+    else{
+      if(cartTransaction.hasOwnProperty("action")){
+        this.getOne(cartTransaction.id, function (err, cartData) {
+          if(!err){
+            let cart = new _Cart(cartData.clientId, cartData.secret);
+            cart.id = cartData.id;
+            cart.items = cartData.items;
+
+            let itemAction = cartTransaction.action;            
+            switch(itemAction){
+              case "add":
+                cart.setItem(cartTransaction.item);
+                break;
+              case "remove":
+                cart.removeItem(cartTransaction.item);
+                break;
+            }
+            // Update cart
+            _store.update(_Cart.getDataSource(), cart.id, cart, function(err){
+              if(!err)
+                callback(false,{message : 'The cart was updated'});
+              else 
+                callback(true,{message: err}); 
+            }); 
+          }
+          else{
+            callback(true,{'message' : `The cart ${cartData.id} does not exist`});
+          }
+        });
+      }
+      else{
+        callback(true,{'Error' : "The action property is required"}); 
+      }
+    }
   }
   else{
-    if(item.hasProperty("add")){
-      transaction.setItem(item);
-      callback(transaction);
-    }
+    callback(true,{'Error' : "Missing item: the clientId and secret properties are required"});
   }
 }
 
-/*------------------------------------------------------**
-** Updating a user                                      **
-**------------------------------------------------------**
-* @param {Object} data: Info about the request Object   **
-*   - data.payload: user data for creating              **
-*     - firstName, lastName, username, password, role   **
-*       are required                                    **
-**------------------------------------------------------*/
-cartController.update = function(userData, callback){
-  // Set user data and check for required field
-  let user = new User(userData.firstName, userData.lastName, userData.username, userData.password, userData.role);
-  user.setPassword();
-  if(user.hasRequiredProperties()){
-    if(userData.id){
-      // Get the user and update
-      this.getOne(userData.id, function (err, userData) {
-        if(!err)
-          callback(false, {'message': `The user ${user.username} was updated`});
-        else
-          callback(true,{'message' : 'The user does not exist'});
-      });
-    }else{
-      // Create a new user
-      user.id = user.setId();
-      _store.create(User.getDataSource(), user.id, user, function(err){
-        if(!err)
-          callback(false,{message : `The new user ${user.username} was created`});
-        else
-          callback(true,{message: err});
-      });
-    }
-  }else
-    callback(true,{'message' : 'Missing data for update.'});
-};
 
 /*------------------------------------------------------**
-** Handler for deleting a user                          **
+** Getting data for cart by id                      **
 **------------------------------------------------------**
-* @param {String} id: user's id (required)              **
+* @param {String} id: cart's id                         **
 **------------------------------------------------------*/
-userController.delete = function(id,callback){
-  _store.delete(User.getDataSource(), id, function(err){
-    if(!err)
-      callback(false, {message: `The user ${id} was deleted`});
-    else
-      callback(true, {message: `Error when trying to delete the user ${id}`})
-  });
+cartController.getOne = function(id, callback){    
+  _store.read(_Cart.getDataSource(), id, function(err, cart){
+    if(err){
+      callback(true, {message: "The cart doesn't exist"});
+    }
+    else{      
+      callback(false, cart);
+    }
+  });  
 };
+
 
 // Export the handlers for users
-module.exports = userController;
+module.exports = cartController;

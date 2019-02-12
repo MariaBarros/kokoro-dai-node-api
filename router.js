@@ -4,6 +4,7 @@
 const _user = require('./routers/user');
 const _token = require('./routers/token');
 const _check = require('./routers/check');
+const _cart = require('./routers/cart');
 
 const errorHandlers = {
   notFound: function(data, response) {
@@ -14,7 +15,8 @@ const errorHandlers = {
 const routerPaths = {
   'users': _user.handlers,
   'tokens': _token.handlers,
-  'checks': _check.handlers
+  'checks': _check.handlers,
+  'carts': _cart.handlers
 };
 
 const router = {};
