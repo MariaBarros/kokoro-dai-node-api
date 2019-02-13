@@ -53,40 +53,5 @@ _carts.get = function(data, headers, callback){
   }
 };
 
-// /*------------------------------------------------------**
-// ** Handler for updating a user                          **
-// **------------------------------------------------------**
-// * @param {Object} data: user data                       **
-// **------------------------------------------------------*/
-// userHandlers.put = function(data, headers, callback){
-//   let token = headers.token && typeof(headers.token) == 'string' ? headers.token.trim() : false;
-//   if(token){
-//     if(!data.id)
-//       callback(true, {message: "Missing field id for update the user"})
-//     else
-//       userCtrl.update(data, callback);
-//   }else
-//     callback(true, {message: "Access denied: you need a valid token for this action"});
-// };
-
-// /*------------------------------------------------------**
-// ** Handler for deleting a user                          **
-// **------------------------------------------------------**
-// * @param {Object} data: Info about the request Object   **
-// *   - data.queryStringObject.id: user's id (required)   **
-// **------------------------------------------------------*/
-// userHandlers.delete = function(data, headers, callback){
-//   // Check that phone number is valid
-//   let id = typeof(data.id) == 'string' ? data.id.trim() : false;
-//   let token = headers.token && typeof(headers.token) == 'string' ? headers.token.trim() : false;
-//   if(token){
-//     if(id)
-//       userCtrl.delete(id, callback);
-//     else
-//       callback(true,{'Error' : "Missing id: the user's id is required"});
-//   }else
-//     callback(true, {message: "Access denied: you need a valid token for this action"});
-// };
-
 // Export the handlers for users
 module.exports = cartHandlers;
