@@ -1,105 +1,57 @@
 /*------------------------------------------------------**
 ** Dependencies - Controllers                           **
 **------------------------------------------------------*/
-let userCtrl = require('../controllers/user');
-let cartCtrl = require('../controllers/cart');
-let tokenCtrl = require('../controllers/token');
+let _userCtrl = require('../controllers/user');
+let _cartCtrl = require('../controllers/cart');
+let _tokenCtrl = require('../controllers/token');
 
 /*------------------------------------------------------**
-** Define the users handlers                            **
+** Define the carts handlers                            **
 **------------------------------------------------------*/
 const cartHandlers = {
   handlers: function(req,callback){
-    if(cartCtrl.getAvailableMethods(req.method)){
+    if(_cartCtrl.getAvailableMethods(req.method)){
       let data = (req.method == "post" || req.method == "put") ? JSON.parse(req.payload) : req.queryStringObject;
-      // Send data, headers and callback function to available user's methods
-      cartHandlers[req.method](data, req.headers, callback);
+      // Send data, headers and callback function to available cart's methods
+      _carts[req.method](data, req.headers, callback);
     } else
       callback(405);
   }
 };
 
+// Container for all the carts methods
+_carts  = {};
+
 /*------------------------------------------------------**
-** Handler for creating a new user                      **
+** Handler for creating or update a new cart                      **
 **------------------------------------------------------**
-* @param {Object} data: user data                       **
+* @param {Object} data: cart data                       **
 **------------------------------------------------------*/
-cartHandlers.post = function(data, headers, callback){
-  if(typeof data === 'object'){
-    cartCtrl.update(data, callback);
-  else
-    callback(true, {message: "You cannot create a user sending data with an id property"})
+_carts.post = function(data, headers, callback){
+  if(data.clientId){
+    _cartCtrl.update(data, callback);
+  }    
+  else{
+    callback(true, {message: "You cannot create a cart sending data without an clientId property"})
+  }    
 };
 
 /*------------------------------------------------------**
 ** Handler for getting data for one or more users       **
 **------------------------------------------------------**
 * @param {Object} data: Info about the request Object   **
-*   - data.id: get user by id (optional)                **
+*   - data.id: get cart by id (required)                **
 **------------------------------------------------------*/
-userHandlers.get = function(data, headers, callback){
+_carts.get = function(data, headers, callback){
   // Checking the queryStringObject for id and the token header
-  let id = typeof(data.id) == 'string' ? data.id.trim() : false,
-    token = headers.token && typeof(headers.token) == 'string' ? headers.token.trim() : false;
+  let id = typeof(data.id) == 'string' ? data.id.trim() : false;
 
-  if(id && token){
-    // Getting data of a particular user
-    tokenCtrl.getOne(id, function(err, tokenData){
-      if(!err && tokenData.tokenId == token && tokenData.expires > Date.now())
-        userCtrl.getOne(id, callback);
-      else{
-        if(!err){
-          if(tokenData.tokenId != token)
-            callback(true, {message: `Incorrect Token ${token}`})
-          else
-            callback(true, {message: `The Token ${token} has expired`})
-        }else
-          callback(true, {message: `The Token ${token} does not exist`});
-      }
-    });
+  if(id){
+    _cartCtrl.getOne(id, callback);
   }else{
-    if(!id)
-      // Getting the users collection
-      userCtrl.getAll(data, callback);
-    else
-      callback(true, {message: "Access denied: you need a valid token for this action"});
+    callback(true, {message: "Missing parameter: you need a cart id for this action"});
   }
 };
 
-/*------------------------------------------------------**
-** Handler for updating a user                          **
-**------------------------------------------------------**
-* @param {Object} data: user data                       **
-**------------------------------------------------------*/
-userHandlers.put = function(data, headers, callback){
-  let token = headers.token && typeof(headers.token) == 'string' ? headers.token.trim() : false;
-  if(token){
-    if(!data.id)
-      callback(true, {message: "Missing field id for update the user"})
-    else
-      userCtrl.update(data, callback);
-  }else
-    callback(true, {message: "Access denied: you need a valid token for this action"});
-};
-
-/*------------------------------------------------------**
-** Handler for deleting a user                          **
-**------------------------------------------------------**
-* @param {Object} data: Info about the request Object   **
-*   - data.queryStringObject.id: user's id (required)   **
-**------------------------------------------------------*/
-userHandlers.delete = function(data, headers, callback){
-  // Check that phone number is valid
-  let id = typeof(data.id) == 'string' ? data.id.trim() : false;
-  let token = headers.token && typeof(headers.token) == 'string' ? headers.token.trim() : false;
-  if(token){
-    if(id)
-      userCtrl.delete(id, callback);
-    else
-      callback(true,{'Error' : "Missing id: the user's id is required"});
-  }else
-    callback(true, {message: "Access denied: you need a valid token for this action"});
-};
-
 // Export the handlers for users
-module.exports = userHandlers;
+module.exports = cartHandlers;
