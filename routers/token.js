@@ -10,7 +10,7 @@ const helpers = require('../helpers/index');
 const tokenHandlers = {
   handlers: function(req,callback){    
     if(_tokenCtrl.getAvailableMethods().indexOf(req.method) > -1){
-      let data = (req.method == "post" || req.method == "put") ? JSON.parse(req.payload) : req.queryStringObject;
+      let data = (req.method !== "get") ? JSON.parse(req.payload) : req.queryStringObject;
       _tokens[req.method](data,callback);
     } else {
       callback(405);

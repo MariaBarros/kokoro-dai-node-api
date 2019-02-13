@@ -3,6 +3,7 @@
 **--------------------------------------------------------------*/
 let _userCtrl = require('../controllers/user');
 let _tokenCtrl = require('../controllers/token');
+let _checkCtrl = require('../controllers/check');
 
 /*--------------------------------------------------------------**
 ** Define the users handlers                                    **
@@ -10,7 +11,7 @@ let _tokenCtrl = require('../controllers/token');
 const userHandlers = {
   handlers: function(req,callback){    
     if(_userCtrl.getAvailableMethods(req.method)){      
-      let data = (req.method != "get") ? JSON.parse(req.payload) : req.queryStringObject;            
+      let data = (req.method !== "get") ? JSON.parse(req.payload) : req.queryStringObject;            
       // Send data, headers and callback function to available user's methods
       _users[req.method](data, req.headers, callback);      
     } else
@@ -112,22 +113,55 @@ _users.delete = function(data, headers, callback){
   let token = headers.token && typeof(headers.token) == 'string' ? headers.token.trim() : false;
 
   if(!token)
-    callback(true, {message: "Access denied: you need a valid token for this action"});
+    callback(403, {message: "Access denied: you need a valid token for this action"});
 
   if(!id)
-    callback(true,{'Error' : "Missing id: the user's id is required"});
+    callback(406,{'Error' : "Missing id: the user's id is required"});
 
-  _tokenCtrl.verifyToken(token, function(err, tokenData){
+  _tokenCtrl.verifyToken(token, function(err, tokenData){    
     if(!err && tokenData){
-      if(tokenData.userId == id)
-        _userCtrl.delete(id, callback);
-      else
-        callback(true,{message: 'Only the user data owner can delete its record.'})     
+      if(tokenData.userId == id){
+        _userCtrl.getOne(id, function(err, userData){
+          if(!err && userData){
+            let checks = typeof(userData.checks) == 'object' && userData.checks instanceof Array ? userData.checks : [];
+            _userCtrl.delete(id, function(err){
+              if(!err){
+                if(checks.length > 0){
+                  _users.deleteChecks(checks, callback);
+                }else
+                  callback(200);
+              }else
+                callback(500, {message: "Couldn't remove the user."})
+            });
+          }else
+            callback(404, {message: `The user with the id ${id} doesn't exist.`})
+        });        
+      }else
+        callback(403,{message: 'Only the user data owner can delete its record.'})     
     }else
       // Send token error
-      callback(true, err);
+      callback(403, {message: "Access denied: you need a valid token for this action"});
   });    
 };
 
+_users.deleteChecks = function(checks, callback){
+  let checksDeleted = 0,
+      deletionError = false;
+
+  checks.forEach(function(checkId){
+    _checkCtrl.deleteFile(checkId, function(err){
+      if(err)
+        deletionError = true
+
+      checksDeleted +=1;
+      if(checksDeleted == checks.length){
+        if(!deletionError)
+          callback(200);
+        else
+          callback(500, err)
+      }
+    });                      
+  });
+}
 // Export the handlers for users
 module.exports = userHandlers;

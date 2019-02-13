@@ -19,7 +19,7 @@ tokenCtrl.getAvailableMethods = function(){
 tokenCtrl.getOne = function(id, callback){
   _store.read(Token.getDataSource(), id, function(err, token){
     if(err)
-      callback({message: "The token doesn't exist"});
+      callback(404,{message: "The token doesn't exist"});
     else      
       callback(false, token);
   });     
@@ -36,22 +36,22 @@ tokenCtrl.create = function(data, callback){
   let token = new Token(data.userId, data.password);  
   // Get user  
   _userCtrl.getOne(token.userId, function(err, userData){
-    if(!err){
+    if(!err){      
       // Compare the sent password to the password stored in the user object              
       if(token.password == userData.password){
         // Create a new token with a random name. Set an expiration date 1 hour in the future.
         token.setToken();
-        // Store the token
+        // Store the token        
         _store.create(Token.getDataSource(), token.tokenId, token, function(err){
           if(err)
-            callback({message: `Error when trying to create the ${token.tokenId} token`, err:err});
+            callback(501, {message: `Error when trying to create the ${token.tokenId} token`, err:err});
           else
             callback(false, token);
         });        
       } else 
-        callback({'Error' : 'Password did not match the specified user\'s stored password'});
+        callback(403,{'Error' : 'Password did not match the specified user\'s stored password'});
     }else
-      callback({'Error': "The user doesn't exist"});
+      callback(err);
   });
 };
 
@@ -66,7 +66,7 @@ tokenCtrl.delete = function(id,callback){
     if(!err)
       callback(false, {message: `The token ${id} was deleted`});  
     else
-      callback({message: `Error when trying to delete the token ${id}`})
+      callback(500,{message: `Error when trying to delete the token ${id}`})
   });  
 };
 
@@ -85,7 +85,7 @@ tokenCtrl.update = function(tokenData, callback){
         callback({'Error' : 'Could not update the token.'});
     });
   } else
-    callback({"Error" : "The token has already expired, and cannot be extended."});
+    callback(500,{"Error" : "The token has already expired, and cannot be extended."});
 }
 
 /*------------------------------------------------------**

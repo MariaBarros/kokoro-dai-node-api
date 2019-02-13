@@ -6,7 +6,6 @@
 const server = require('./server');  
 const workers = require('./workers');
 
-
 const app = {};
 
 // Init function

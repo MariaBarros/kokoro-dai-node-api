@@ -92,18 +92,12 @@ userCtrl.update = function(userData, callback){
   // Get the user and update
   this.getOne(userData.id, function (err, user) {
     if(!err){
-      if(userData.firstName)
-        user.firstName = userData.firstName
-      if(userData.lastName)
-        user.lastName = userData.lastName
-      if(userData.username)
-        user.username = userData.username
-      if(userData.role)
-        user.role = userData.role
+      let editedUser = { ...user,  ...userData };
+      
       if(userData.password)
-        user.password = helpers.hash(userData.password)
-
-      _store.update(_User.getDataSource(), user.id, user, function(err){
+        editedUser.password = helpers.hash(userData.password)
+      
+      _store.update(_User.getDataSource(), user.id, editedUser, function(err){
         if(!err)
           callback(false, {'message': `The user ${user.username} was updated`});    
         else

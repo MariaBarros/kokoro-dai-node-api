@@ -19,8 +19,8 @@ class Check{
           && helpers.isNotEmptyString(data.url) 
           && Check.isValidMethod(data.method)
           && helpers.isObject(data.successCodes) && data.successCodes instanceof Array && data.successCodes.length>0
-          && helpers.isInt(data.timeoutSeconds)  && data.timeoutSeconds >= 1 && data.timeoutSeconds <= 5 
-          && typeof(data.lastChecked) == 'number' && data.lastChecked > 0;
+          && helpers.isInt(data.timeoutSeconds)  && parseInt(data.timeoutSeconds) >= 1 && parseInt(data.timeoutSeconds) <= 5;
+          //&& typeof(data.lastChecked) == 'number' && data.lastChecked > 0;
   }
 
   setId(){

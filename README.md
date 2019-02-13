@@ -329,7 +329,7 @@ curl -X GET -H "Content-Type:application/json" -H "token:sryvy4ju9jv4lk09tvme"  
 curl -i -X PUT -H "Content-Type:application/json" -H "token:sryvy4ju9jv4lk09tvme" http://localhost:3000/users -d '{"id":"c154eee7faae70fc5b3ef97eb906b6be8311f165ab2b39fb28febdce79f6c52d","firstName":"Maria Isabel"}'
 
 ### Example: Deleting a user
-curl -i -X DELETE -H "Content-Type:application/json" -H "token:sryvy4ju9jv4lk09tvme" http://localhost:3000/tokens -d '{"id":"70e9a46dfb645d5905733b2df939fd29ae2774acb22904dd0280720980beda23"}'
+curl -i -X DELETE -H "Content-Type:application/json" -H "token:vl6a278nevkhhy5vj4hl" http://localhost:3000/users -d '{"id":"c154eee7faae70fc5b3ef97eb906b6be8311f165ab2b39fb28febdce79f6c52d"}'
 
 ### Example: Updating user token
 curl -i -X PUT -H "Content-Type:application/json" http://localhost:3000/tokens -d '{"id":"sryvy4ju9jv4lk09tvme","extend":true}'
@@ -338,6 +338,33 @@ curl -i -X PUT -H "Content-Type:application/json" http://localhost:3000/tokens -
 Checks protect the server from overloads. 
 
 The checks are tasks that say our system: "go and check this url every x number of seconds, and then tell the user (the creator of the check) whether the url is up or down".
+
+We are going to allow the user to create up to five checks and later on we'll go about building background processes that will perform the checking.
+
+First, let's go creating the check service with a post, get, put and delete that allows the user who's logged in and got a token, to create up to five checks and had those checks listed in its account.
+
+### Example: Creating a user check
+curl -i -X POST -H "Content-Type:application/json" -H "token:vl6a278nevkhhy5vj4hl" http://localhost:3000/checks -d '{"protocol":"http", "method": "get", "url": "google.com", "successCodes": [200,201], "timeoutSeconds": "3"}'
+
+### Example: Getting a user check
+curl -i -X GET -H "Content-Type:application/json" -H "token:mg682ja56gpn01i85ipz" http://localhost:3000/checks?id=qgp3r37enh7n6w6hg2x6
+
+### Example: Updating a user check
+curl -i -X PUT -H "Content-Type:application/json" -H "token:mg682ja56gpn01i85ipz" http://localhost:3000/checks -d '{"id":"qgp3r37enh7n6w6hg2x6","protocol":"https"}'
+
+### Example: Deleting a user check
+curl -i -X DELETE -H "Content-Type:application/json" -H "token:mg682ja56gpn01i85ipz" http://localhost:3000/checks -d '{"id":"g7itzjitiesutj70hvpa"}'
+
+## Connecting to an API
+One of the most common task that we are going have to do is integrate with another API. Many developers would need to go to the third parties and look for a NodeJS library they provide or look for NodeJS NPM library that someone else has written for interacting with that API.
+
+But there's another way to integrate an API. You can simply craft HTTP messages or HTTPS messages and send them off the third party API. 
+
+For this app, we want to integrate with Twilio, a service that provides and manipulates phone numbers in order to take or receive calls or SMS messages o video calls, or something like that.
+
+With Twilio, we'll send SMS alerts to the users telling them if their checks are up or down. Before we do that full integration, we'd like to write a little library that integrates with Twilio and allows us to send an SMS message.
+
+So, we are going to create a new function in the helpers to send an SMS message.
 
 ## Contributing
 Fork this project
