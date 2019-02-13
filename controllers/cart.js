@@ -1,84 +1,77 @@
-/*------------------------------------------------------**
-** Dependencies - Models & Data                         **
-**------------------------------------------------------*/
-let Cart = require('../models/cart');
+let _Cart = require('../models/cart');
 let _store = require('../controllers/data');
+let _tokenCtrl = require('../controllers/token');
+
+let helpers = require('../helpers/index');
 
 const cartController = {};
 
 cartController.getAvailableMethods = function(method){
-  return Cart.getAvailableMethods().indexOf(method) > -1;
+  return _Cart.getAvailableMethods().indexOf(method) > -1;
 }
 
 cartController.create = function (data, callback){
-   let clientId= data.clientId;
-   let secret= data.secret;
-   let item= data.item;
-   let cart = new Cart(clientId, secret, item);
-   callback(cart);
+   let cart = new _Cart(data.clientId, data.secret, data.item);
+   cart.id = cart.setId();
+   cart.total = _Cart.setTotal(cart.items);
+   delete cart.secret;
+
+   _store.create(_Cart.getDataSource(), cart.id, cart, function(err){
+      if(!err)
+        callback(false,cart);
+      else 
+        callback(500,{message: err}); 
+    });
 }
 
-cartController.update = function (cart, item, callback){
-  if(item.hasProperty("remove")){
-      cart.removeItem(item);
-      callback(cart);
-  }
-  else{
-    if(item.hasProperty("add")){
-      cart.setItem(item);
-      callback(cart);
-    }
-  }
-}
+cartController.update = function (item, token, callback){
+  this.getOne(token, function(err, cartData){
+    if(!err && cartData){
+      if(cartData.id == token){
+        if(cartData.expires >= Date.now()){
+          if(_Cart.getAvailableActions().indexOf(item.action) > -1){
+            let items = _Cart.update(item, cartData.items);
+            cartData.total = _Cart.setTotal(items);
 
-/*------------------------------------------------------**
-** Updating a user                                      **
-**------------------------------------------------------**
-* @param {Object} data: Info about the request Object   **
-*   - data.payload: user data for creating              **
-*     - firstName, lastName, username, password, role   **
-*       are required                                    **
-**------------------------------------------------------*/
-cartController.update = function(userData, callback){
-  // Set user data and check for required field
-  let user = new User(userData.firstName, userData.lastName, userData.username, userData.password, userData.role);
-  user.setPassword();
-  if(user.hasRequiredProperties()){
-    if(userData.id){
-      // Get the user and update
-      this.getOne(userData.id, function (err, userData) {
-        if(!err)
-          callback(false, {'message': `The user ${user.username} was updated`});
-        else
-          callback(true,{'message' : 'The user does not exist'});
-      });
-    }else{
-      // Create a new user
-      user.id = user.setId();
-      _store.create(User.getDataSource(), user.id, user, function(err){
-        if(!err)
-          callback(false,{message : `The new user ${user.username} was created`});
-        else
-          callback(true,{message: err});
-      });
-    }
-  }else
-    callback(true,{'message' : 'Missing data for update.'});
-};
+            _store.update(_Cart.getDataSource(), cartData.id, cartData, function(err){
+              if(!err)
+                callback(false,cartData);
+              else 
+                callback(true,{message: err}); 
+            }); 
 
-/*------------------------------------------------------**
-** Handler for deleting a user                          **
-**------------------------------------------------------**
-* @param {String} id: user's id (required)              **
-**------------------------------------------------------
-cartController.delete = function(id,callback){
-  _store.delete(User.getDataSource(), id, function(err){
-    if(!err)
-      callback(false, {message: `The user ${id} was deleted`});
-    else
-      callback(true, {message: `Error when trying to delete the user ${id}`})
+          }
+          else{
+            callback(503);
+          }
+        }
+        else{
+          callback(503);
+        }
+      }
+      else{
+        callback(503);
+      }
+    }
   });
+}
+
+/*------------------------------------------------------**
+** Getting data for cart by id                      **
+**------------------------------------------------------**
+* @param {String} id: cart's id                         **
+**------------------------------------------------------*/
+cartController.getOne = function(id, callback){    
+  _store.read(_Cart.getDataSource(), id, function(err, cart){
+    if(err){
+      callback(true, {message: "The cart doesn't exist"});
+    }
+    else{      
+      callback(false, cart);
+    }
+  });  
 };
-*/
+
+
 // Export the handlers for users
 module.exports = cartController;

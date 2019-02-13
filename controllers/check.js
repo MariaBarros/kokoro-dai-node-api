@@ -36,7 +36,7 @@ checkCtrl.getAll = function(callback){
         }
       }
     }else
-      callback(true, err);    
+      callback(500, err);    
   });
 };
 
@@ -46,12 +46,11 @@ checkCtrl.getAll = function(callback){
 * @param {String} check: check's id                     **
 **------------------------------------------------------*/
 checkCtrl.getOne = function(check,callback){
-  _store.read(_Check.getDataSource(), check,function(err, checkData){
-    if(!err && checkData){
+  _store.read(_Check.getDataSource(), check, function(err, checkData){
+    if(!err && checkData)
       callback(false, checkData);
-    } else {
-      callback(true, {message: `The check's: ${check} does not exist`});
-    }
+    else
+      callback(404, {message: `The check's: ${check} does not exist`});
   });  
 };
 
@@ -59,31 +58,37 @@ checkCtrl.getOne = function(check,callback){
 ** Handler for creating a new check                     **
 **------------------------------------------------------**
 * @param {Object} data: Info about the request Object   **
+* @param {String} userId: user id for creating the check**
 **------------------------------------------------------*/
-checkCtrl.create = function(data, callback){ 
-  if(_Check.hasRequiredProperties(data)){
-    data.id = helpers.createRandomString(20);
-    _userCtrl.getOne(data.userId, function(err, userData){
-      if(!err){
-        let userChecks = typeof(userData.checks) == 'object' && userData.checks instanceof Array ? userData.checks : [];
-        if(userChecks.length < config.maxChecks){
-          _store.create(_Check.getDataSource(), data.id, data, function(err){
-            if(!err){
-              // Update the user data              
-              userData.checks = userChecks;
-              userData.checks.push(data.id);
-              _userCtrl.update(userData, callback);
-            } else {
-              callback(err, null);
-            }
-          });        
-        }else
-          callback(true, {message: `The user ${userData.username} already has the maximum number of checks (${config.maxChecks}).`});
+checkCtrl.create = function(data, callback){
+  if(!_Check.hasRequiredProperties(data))
+    callback(406,{message: "Missing data for create the check"});
+  
+  _userCtrl.getOne(data.userId, function(err, userData){
+    if(!err){
+      let userChecks = typeof(userData.checks) == 'object' && userData.checks instanceof Array ? userData.checks : [];
+      if(userChecks.length < config.maxChecks){
+        // Create the check
+        data.id = helpers.createRandomString(20);
+        _store.create(_Check.getDataSource(), data.id, data, function(err){
+          if(!err){
+            // Update the user data              
+            userData.checks = userChecks;
+            userData.checks.push(data.id);
+            _userCtrl.update(userData, function(err){
+              if(err)
+                callback(500,{message: 'Impossible update the user checks.'})
+              else
+                callback(false,data);
+            });
+          }else
+            callback(err);
+        });        
       }else
-        callback(true, {message: `The user for the token does not exist`});
-    });    
-  }else
-    callback(true, {message: "Missing data for create the check"});
+        callback(406, {message: `The user ${userData.username} already has the maximum number of checks (${config.maxChecks}).`});
+    }else
+      callback(err);
+  });  
 };
 
 /*------------------------------------------------------**
@@ -91,27 +96,15 @@ checkCtrl.create = function(data, callback){
 **------------------------------------------------------**
 * @param {Object} data: Info about the request Object   **
 **------------------------------------------------------*/
-checkCtrl.update = function(item, newData, callback){
-  if(helpers.isNotEmptyString(newData.protocol) && helpers.contain(['https','http'], newData.protocol))
-    item.protocol = newData.protocol;
-
-  if(helpers.isNotEmptyString(data.url))
-    item.url = newData.url.trim();
-
-  if(helpers.isNotEmptyString(newData.method) && helpers.contain(['post','get','put','delete'], newData.method))
-    item.method = newData.method;
-
-  if(helpers.isObject(newData.successCodes) && newData.successCodes instanceof Array && newData.successCodes.length > 0)
-    item.successCodes = newData.successCodes;
-
-  if(helpers.isNumber(newData.timeoutSeconds) && data.payload.timeoutSeconds >= 1 && data.payload.timeoutSeconds <= 5)
-   item.timeoutSeconds = newData.timeoutSeconds;
-
-  _store.update(_Check.getDataSource(), item.id, item, function(err){
+checkCtrl.update = function(check, callback){
+  if(!_Check.hasRequiredProperties(check))
+    callback(406,{message: "Missing or invalid data for update the check"});
+  
+  _store.update(_Check.getDataSource(), check.id, check, function(err){
     if(!err){      
-      callback(false, {message: `The check id ${item.id} was updated.`});
+      callback(false, {message: `The check id ${check.id} was updated.`});
     } else {
-      callback(500, {message: `Could not update the ckeck ${item.id}.`});
+      callback(500, {message: `Could not update the ckeck ${check.id}.`});
     }
   });  
 };
@@ -120,41 +113,43 @@ checkCtrl.update = function(item, newData, callback){
 ** Handler for deleting a user's check                  **
 **------------------------------------------------------**
 * @param {String} id: check's id (required)             **
+* @param {String} userId: user's id (required)          **
 **------------------------------------------------------*/
-checkCtrl.delete = function(id,callback){
-  let checkDataSource = _Check.getDataSource();
-
-  _store.read(checkDataSource, id, function(err, checkData){
+checkCtrl.delete = function(id, userId, callback){      
+  _store.delete(_Check.getDataSource(), id, function(err){
     if(!err){
-      _store.delete(checkDataSource, id, function(err){
-        if(!err){
-          // Get the user
-          _userCtrl.getOne(checkData.userId, function(err, userData){
-            if(!err){
-              let userChecks = typeof(userData.checks) == 'object' && userData.checks instanceof Array ? userData.checks : [],
-              checkPosition = userChecks.indexOf(id);
-              // Remove the deleted check from their list of checks                    
-              if(checkPosition > -1){
-                userChecks.splice(checkPosition,1);
-                // Re-save the user's data
-                userData.checks = userChecks;
-                _userCtrl.update(userData, function(err, response){
-                  if(!err)
-                    callback(false, {message: `The user's checks were updated`});
-                  else
-                    callback(true, {message: 'Could not update the user.'});
-                });                      
-              } else {
-                callback(500,{"Error" : "Could not find the check on the user's object, so could not remove it."});
-              }
-            }else
-              callback(true, {message: `Could not find the user who created the check, so could not remove the check from the list of checks on their user object.`});
-          });
+      // Get the user
+      _userCtrl.getOne(userId, function(err, userData){
+        if(!err && userData){
+          let userChecks = typeof(userData.checks) == 'object' && userData.checks instanceof Array ? userData.checks : [],
+          checkPosition = userChecks.indexOf(id);
+          // Remove the deleted check from their list of checks                    
+          if(checkPosition > -1){
+            userChecks.splice(checkPosition,1);
+            // Re-save the user's data
+            userData.checks = userChecks;
+            _userCtrl.update(userData, function(err, response){
+              if(!err)
+                callback(false, {message: `The user's checks were updated and the check was removed.`});
+              else
+                callback(500, {message: 'Could not update the user.'});
+            });                      
+          }else
+            callback(404,{"Error" : "Could not find the check on the user's object, so could not remove it."});            
         }else
-          callback(true, {message: `Error when trying to delete the check ${id}.`});  
+          callback(404, {message: `Could not find the user who created the check, so could not remove the check from the list of checks on their user object.`});
       });
     }else
-      callback(true, {message: `The check ${id} could not be found.`})
+      callback(500, {message: `Error when trying to delete the check ${id}.`});  
+  });  
+};
+
+checkCtrl.deleteFile = function(id, callback){      
+  _store.delete(_Check.getDataSource(), id, function(err){
+    if(!err){      
+      callback(false);
+    }else
+      callback(500, {message: `Error when trying to delete the check ${id}.`});  
   });  
 };
 

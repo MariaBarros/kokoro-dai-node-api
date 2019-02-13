@@ -3,10 +3,11 @@
 **------------------------------------------------------*/
 let _User = require('../models/user');
 let _store = require('../controllers/data');
+const helpers = require('../helpers/index');
 
-const userController = {};
+const userCtrl = {};
 
-userController.getAvailableMethods = function(method){
+userCtrl.getAvailableMethods = function(method){
   return _User.getAvailableMethods().indexOf(method) > -1;
 }
 
@@ -15,7 +16,7 @@ userController.getAvailableMethods = function(method){
 **------------------------------------------------------**
 * @param {Object} data: Info about the request Object   **
 **------------------------------------------------------*/
-userController.getAll = function(filters, callback){
+userCtrl.getAll = function(filters, callback){
   let users = [], userDataSource = _User.getDataSource();
   _store.list(userDataSource, function(err, usersFiles){
     if(!err){
@@ -34,7 +35,7 @@ userController.getAll = function(filters, callback){
         }
       }
     }else
-      callback(true, err);    
+      callback(err);    
   });
 };
 
@@ -43,14 +44,39 @@ userController.getAll = function(filters, callback){
 **------------------------------------------------------**
 * @param {String} id: user's id                         **
 **------------------------------------------------------*/
-userController.getOne = function(id, callback){    
+userCtrl.getOne = function(id, callback){    
   _store.read(_User.getDataSource(), id, function(err, user){
     if(err)
-      callback(true, {message: "The user doesn't exist"});
+      callback({message: "The user doesn't exist"});
     else{      
       callback(false, user);
     }
   });  
+};
+
+/*------------------------------------------------------**
+** Creating a user                                      **
+**------------------------------------------------------**
+* @param {Object} data: Info about the request Object   **
+*   - data.payload: user data for creating              **
+*     - firstName, lastName, username, password, role   **
+*       are required                                    **
+**------------------------------------------------------*/
+userCtrl.create = function(userData, callback){
+  // Set user data and check for required field  
+  let user = new _User(userData.firstName, userData.lastName, userData.username, userData.password, userData.role);  
+  user.setPassword();
+  if(user.hasRequiredProperties()){    
+    // Create a new user
+    user.id = user.setId();
+    _store.create(_User.getDataSource(), user.id, user, function(err){
+      if(!err)
+        callback(false,{message : `The new user ${user.username} with the id ${user.id} was created`});
+      else 
+        callback(err);
+    });          
+  }else
+    callback(true,{'message' : 'Missing data for update.'});
 };
 
 /*------------------------------------------------------**
@@ -59,33 +85,28 @@ userController.getOne = function(id, callback){
 * @param {Object} data: Info about the request Object   **
 *   - data.payload: user data for creating              **
 *     - firstName, lastName, username, password, role   **
-*       are required                                    **
+*       are optional                                    **
+*     - id is required                                  **
 **------------------------------------------------------*/
-userController.update = function(userData, callback){
-  // Set user data and check for required field  
-  let user = new _User(userData.firstName, userData.lastName, userData.username, userData.password, userData.role);  
-  user.setPassword();
-  if(user.hasRequiredProperties()){
-    if(userData.id){
-      // Get the user and update
-      this.getOne(userData.id, function (err, userData) {
+userCtrl.update = function(userData, callback){      
+  // Get the user and update
+  this.getOne(userData.id, function (err, user) {
+    if(!err){
+      let editedUser = { ...user,  ...userData };
+      
+      if(userData.password)
+        editedUser.password = helpers.hash(userData.password)
+      
+      _store.update(_User.getDataSource(), user.id, editedUser, function(err){
         if(!err)
-          callback(false, {'message': `The user ${user.username} was updated`});
+          callback(false, {'message': `The user ${user.username} was updated`});    
         else
-          callback(true,{'message' : 'The user does not exist'});
-      });
-    }else{
-      // Create a new user
-      user.id = user.setId();
-      _store.create(_User.getDataSource(), user.id, user, function(err){
-        if(!err)
-          callback(false,{message : `The new user ${user.username} was created`});
-        else 
-          callback(true,{message: err});
+          callback(err);
       });      
     }
-  }else
-    callback(true,{'message' : 'Missing data for update.'});
+    else
+      callback({'message' : 'The user does not exist'});
+  });  
 };
 
 /*------------------------------------------------------**
@@ -93,14 +114,20 @@ userController.update = function(userData, callback){
 **------------------------------------------------------**
 * @param {String} id: user's id (required)              **
 **------------------------------------------------------*/
-userController.delete = function(id,callback){  
-  _store.delete(_User.getDataSource(), id, function(err){
-    if(!err)
-      callback(false, {message: `The user ${id} was deleted`});
-    else
-      callback(true, {message: `Error when trying to delete the user ${id}`})
+userCtrl.delete = function(id,callback){
+  this.getOne(id, function(err){        
+    if(err)
+      callback(true, err);
+    else{
+      _store.delete(_User.getDataSource(), id, function(err){
+        if(!err)
+          callback(false, {message: `The user ${id} was deleted`});
+        else
+          callback(true, {message: `Error when trying to delete the user ${id}`})
+      });
+    }
   });  
 };
 
 // Export the handlers for users
-module.exports = userController;
+module.exports = userCtrl;

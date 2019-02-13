@@ -8,12 +8,11 @@ const helpers = require('../helpers/index');
 ** Class Cart                                           **
 **------------------------------------------------------*/
 class Article{
-  constructor(properties){
-    let {id, description, price, ...restProperties} = properties;
-
-    properties.forEach(function (property){
-      this[property[0]] = property[1];
-    });
+  constructor(id, description, quantity, price){
+    this.id = id;
+    this.description = description;
+    this.quantity = quantity;
+    this.price = price;
   }
 
   static getAvailableMethods(){
@@ -21,7 +20,7 @@ class Article{
   }
 
   getDiscount(){
-    if(this.hasProperty("discount")){
+    if(this.hasOwnProperty("discount")){
       return this.discount;
     }
     return 0;

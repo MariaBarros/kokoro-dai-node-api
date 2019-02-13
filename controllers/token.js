@@ -2,7 +2,7 @@
 ** Dependencies - Models, Controllers & Data            **
 **------------------------------------------------------*/
 let Token = require('../models/token');
-let userCtrl = require('../controllers/user');
+let _userCtrl = require('../controllers/user');
 let _store = require('../controllers/data');
 
 const tokenCtrl = {};
@@ -19,7 +19,7 @@ tokenCtrl.getAvailableMethods = function(){
 tokenCtrl.getOne = function(id, callback){
   _store.read(Token.getDataSource(), id, function(err, token){
     if(err)
-      callback(true, {message: "The token doesn't exist"});
+      callback(404,{message: "The token doesn't exist"});
     else      
       callback(false, token);
   });     
@@ -34,24 +34,24 @@ tokenCtrl.getOne = function(id, callback){
 **------------------------------------------------------*/
 tokenCtrl.create = function(data, callback){  
   let token = new Token(data.userId, data.password);  
-  // Get user
-  userCtrl.getOne(token.userId, function(err, userData){
-    if(!err){
+  // Get user  
+  _userCtrl.getOne(token.userId, function(err, userData){
+    if(!err){      
       // Compare the sent password to the password stored in the user object              
       if(token.password == userData.password){
         // Create a new token with a random name. Set an expiration date 1 hour in the future.
         token.setToken();
-        // Store the token
-        _store.create(Token.getDataSource(), token.userId, token, function(err){
+        // Store the token        
+        _store.create(Token.getDataSource(), token.tokenId, token, function(err){
           if(err)
-            callback(true, {message: `Error when trying to create the ${token.tokenId} token`});
+            callback(501, {message: `Error when trying to create the ${token.tokenId} token`, err:err});
           else
             callback(false, token);
         });        
       } else 
-        callback(true, {'Error' : 'Password did not match the specified user\'s stored password'});          
+        callback(403,{'Error' : 'Password did not match the specified user\'s stored password'});
     }else
-      callback(true, {'Error': "The user doesn't exist"});      
+      callback(err);
   });
 };
 
@@ -66,7 +66,7 @@ tokenCtrl.delete = function(id,callback){
     if(!err)
       callback(false, {message: `The token ${id} was deleted`});  
     else
-      callback(true, {message: `Error when trying to delete the token ${id}`})
+      callback(500,{message: `Error when trying to delete the token ${id}`})
   });  
 };
 
@@ -78,28 +78,28 @@ tokenCtrl.update = function(tokenData, callback){
     // Set the expiration an hour from now
     tokenData.expires = Token.updateTokenExpires();
     // Store the new updates
-    _store.update(Token.getDataSource(), tokenData, function(err){
+    _store.update(Token.getDataSource(), tokenData.tokenId, tokenData, function(err){
       if(!err){
-        callback(null, tokenData);
+        callback(false, tokenData);
       } else
-        callback(500, {'Error' : 'Could not update or create the token.'});
+        callback({'Error' : 'Could not update the token.'});
     });
   } else
-    callback(400,{"Error" : "The token has already expired, and cannot be extended."});
+    callback(500,{"Error" : "The token has already expired, and cannot be extended."});
 }
 
-tokenCtrl.verifyToken = function(userId, token, callback){
-  // Lookup the token by user's id
-  this.getOne(userId, function(err, tokenData){    
-    if(!err && tokenData.tokenId == token && tokenData.expires > Date.now()){            
-      callback(false, {});      
-    }else{
-      if(!err){
-        let errorMessage = (tokenData.tokenId != token) ? `Invalid Token ${token}` : `The Token ${token} has expired`;
-        callback(true, {message: errorMessage});
-      }else
-        callback(true, {message: `The Token ${token} does not exist`});      
-    }
+/*------------------------------------------------------**
+** Handler for verifying a token                        **
+**------------------------------------------------------**
+* @param {String} token: user's token (required)        **
+**------------------------------------------------------*/
+tokenCtrl.verifyToken = function(token, callback){
+  // Get the token  
+  this.getOne(token, function(err, tokenData){    
+    if(!err && tokenData.expires > Date.now())
+      callback(false, tokenData);      
+    else
+      callback(err || {message: `The Token ${token} has expired`});
   });  
 }
 

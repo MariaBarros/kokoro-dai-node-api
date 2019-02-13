@@ -2,7 +2,7 @@
 ** Dependencies - Helpers                               **
 **------------------------------------------------------*/
 const helpers = require('../helpers/index');
-const articles = require('../models/article');
+const _article = require('../models/article');
 
 
 /*------------------------------------------------------**
@@ -12,38 +12,25 @@ class Cart{
   constructor(clientId, secret, item){
     this.clientId = helpers.isNotEmptyString(clientId) ? clientId.trim() : false;
     this.secret = helpers.isNotEmptyString(secret) ? secret.trim() : "";
-    this.token = helpers.hash(this.clientId + this.secret);
-    this.setItem(item);
-    this.total=0;
-
+    this.items = [item];
+    this.expires = Date.now() + 1000 * 60 * 60;
   }
 
-  setItem(item){
-     if(!this.items)
-     {
-        this.items = [];
-    }
-
-//    if(item instanceof Article){
-      this.items.push(item);
-      this.setTotal();
-//    }
+  setId(){
+    return helpers.hash(this.clientId + this.secret);
   }
 
-  setTotal(){
-    this.total = 0;
-    //this.items.forEach(function(item){
-    //this.total += (item.hasProperty("price")) ? (item.price * (1 - item.getDiscount())) : 0;
-    this.total +=100;
-    //});
+  hasRequiredProperties(){
+    return this.clientId && this.secret && this.items;
   }
 
-  removeItem(item){
-    let index = this.items.indexOf(item);
-    if(index > -1){
-      this.items = this.items.slice(index);
-    }
-    this.setTotal();
+  static setTotal(items){
+    let total = 0;
+    items.forEach(function(item){    
+        //total += (item.hasOwnProperty("price")) ? (item.price * (1 - item.getDiscount())) : 0;
+        total += (item.hasOwnProperty("price")) ? parseFloat(item.price * item.quantity) : 0;
+    });
+    return total;
   }
 
   static getAvailableMethods(){
@@ -51,9 +38,41 @@ class Cart{
   }
 
   static getAvailableActions(){
-    return ['getAll','getOne','update','delete'];
+    return ['add','update','remove'];
+  }
+
+  static getDataSource(){
+    return 'carts';
+  }
+
+  static update(item, items){
+    let index = -1;
+    switch(item.action){
+        case "add":
+          delete item.action;
+          items.push(item);          
+          break;
+        case "remove":
+          let delItem = items.filter(el => el.id == item.id);
+          index = items.indexOf(delItem[0]);
+
+          if(index >= 0){
+            items.splice(index, 1);
+          }
+          break;
+        case "update":
+          let delItem = items.filter(el => el.id == item.id);
+          index = items.indexOf(delItem[0]);
+          
+          if(index >= 0){
+            items[index] = item;
+          }
+          break;
+      }
+
+      return items;
   }
 }
 
-// Export the User Model
+// Export the Cart Model
 module.exports = Cart;
