@@ -12,7 +12,7 @@ class Cart{
   constructor(clientId, secret, item = null){
     this.clientId = helpers.isNotEmptyString(clientId) ? clientId.trim() : false;
     this.secret = helpers.isNotEmptyString(secret) ? secret.trim() : "";
-    this.token = helpers.hash(this.clientId + this.secret);
+    //this.token = helpers.hash(this.clientId + this.secret);
     if(item != null){
       this.setItem(item);
     }    

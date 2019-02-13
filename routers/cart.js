@@ -36,40 +36,22 @@ _carts.post = function(data, headers, callback){
   }    
 };
 
-// /*------------------------------------------------------**
-// ** Handler for getting data for one or more users       **
-// **------------------------------------------------------**
-// * @param {Object} data: Info about the request Object   **
-// *   - data.id: get user by id (optional)                **
-// **------------------------------------------------------*/
-// userHandlers.get = function(data, headers, callback){
-//   // Checking the queryStringObject for id and the token header
-//   let id = typeof(data.id) == 'string' ? data.id.trim() : false,
-//     token = headers.token && typeof(headers.token) == 'string' ? headers.token.trim() : false;
+/*------------------------------------------------------**
+** Handler for getting data for one or more users       **
+**------------------------------------------------------**
+* @param {Object} data: Info about the request Object   **
+*   - data.id: get cart by id (required)                **
+**------------------------------------------------------*/
+_carts.get = function(data, headers, callback){
+  // Checking the queryStringObject for id and the token header
+  let id = typeof(data.id) == 'string' ? data.id.trim() : false;
 
-//   if(id && token){
-//     // Getting data of a particular user
-//     tokenCtrl.getOne(id, function(err, tokenData){
-//       if(!err && tokenData.tokenId == token && tokenData.expires > Date.now())
-//         userCtrl.getOne(id, callback);
-//       else{
-//         if(!err){
-//           if(tokenData.tokenId != token)
-//             callback(true, {message: `Incorrect Token ${token}`})
-//           else
-//             callback(true, {message: `The Token ${token} has expired`})
-//         }else
-//           callback(true, {message: `The Token ${token} does not exist`});
-//       }
-//     });
-//   }else{
-//     if(!id)
-//       // Getting the users collection
-//       userCtrl.getAll(data, callback);
-//     else
-//       callback(true, {message: "Access denied: you need a valid token for this action"});
-//   }
-// };
+  if(id){
+    _cartCtrl.getOne(id, callback);
+  }else{
+    callback(true, {message: "Missing parameter: you need a cart id for this action"});
+  }
+};
 
 // /*------------------------------------------------------**
 // ** Handler for updating a user                          **
