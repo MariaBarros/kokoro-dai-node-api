@@ -16,7 +16,7 @@ const routerPaths = {
   'users': _user.handlers,
   'tokens': _token.handlers,
   'checks': _check.handlers,
-  'carts': _cart.handlers
+  'carts' : _cart.handlers
 };
 
 const router = {};

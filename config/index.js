@@ -7,8 +7,8 @@ var environments = {};
 
 // Staging (default) environment
 environments.staging = {
-  'httpPort' : 3000,
-  'httpsPort': 3001,
+  'httpPort' : 3004,
+  'httpsPort': 3005,
   'envName' : 'staging',
   'hashingSecret' : 'thisIsASecret',
   'maxChecks': 5,

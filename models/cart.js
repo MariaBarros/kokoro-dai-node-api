@@ -9,13 +9,11 @@ const _article = require('../models/article');
 ** Class Cart                                           **
 **------------------------------------------------------*/
 class Cart{
-  constructor(clientId, secret, item = null){
+  constructor(clientId, secret, item){
     this.clientId = helpers.isNotEmptyString(clientId) ? clientId.trim() : false;
     this.secret = helpers.isNotEmptyString(secret) ? secret.trim() : "";
-    //this.token = helpers.hash(this.clientId + this.secret);
-    if(item != null){
-      this.setItem(item);
-    }    
+    this.items = [item];
+    this.expires = Date.now() + 1000 * 60 * 60;
   }
 
   setId(){
@@ -26,33 +24,13 @@ class Cart{
     return this.clientId && this.secret && this.items;
   }
 
-  setItem(item){
-    if(!this.items)
-    {
-        this.items = [];
-    }
-
-    this.items.push(new _article(item.id, item.description, item.quantity, item.price));
-    this.setTotal();
-  }
-
-  removeItem(item){
-    let index = this.items.findIndex(function(element){
-      return element.id == item.id;});
-      
-    if(index > -1){
-      this.items.splice(index, 1); // remove one item from the index
-    }
-    this.setTotal();
-  }
-
-  setTotal(){
+  static setTotal(items){
     let total = 0;
-    this.items.forEach(function(item){    
+    items.forEach(function(item){    
         //total += (item.hasOwnProperty("price")) ? (item.price * (1 - item.getDiscount())) : 0;
         total += (item.hasOwnProperty("price")) ? parseFloat(item.price * item.quantity) : 0;
     });
-    this.total = total;
+    return total;
   }
 
   static getAvailableMethods(){
@@ -60,11 +38,39 @@ class Cart{
   }
 
   static getAvailableActions(){
-    return ['getAll','getOne','update','delete'];
+    return ['add','update','remove'];
   }
 
   static getDataSource(){
     return 'carts';
+  }
+
+  static update(item, items){
+    let index = -1;
+    switch(item.action){
+        case "add":
+          delete item.action;
+          items.push(item);          
+          break;
+        case "remove":
+          let delItem = items.filter(el => el.id == item.id);
+          index = items.indexOf(delItem[0]);
+
+          if(index >= 0){
+            items.splice(index, 1);
+          }
+          break;
+        case "update":
+          let delItem = items.filter(el => el.id == item.id);
+          index = items.indexOf(delItem[0]);
+          
+          if(index >= 0){
+            items[index] = item;
+          }
+          break;
+      }
+
+      return items;
   }
 }
 
