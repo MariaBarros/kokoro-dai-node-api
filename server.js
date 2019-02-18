@@ -1,3 +1,7 @@
+/*------------------------------------------------------**
+** Server-related tasks                                 **
+**------------------------------------------------------*/
+
 // Dependencies
 const http = require('http');
 const https = require('https');

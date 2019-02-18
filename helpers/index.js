@@ -110,7 +110,7 @@ helpers.createRandomString = function(strLength){
 **------------------------------------------------------*/
 helpers.sendTwilioSms = function(phone, msg, callback){
   // Validate parameters
-  phone = typeof(phone) == 'string' && phone.trim().length == 11 ? phone.trim() : false;
+  phone = typeof(phone) == 'string' && phone.trim().length == 14 ? phone.trim() : false;
   msg = typeof(msg) == 'string' && msg.trim().length > 0 && msg.trim().length <= 1600 ? msg.trim() : false;
 
   if(phone && msg){
@@ -118,7 +118,7 @@ helpers.sendTwilioSms = function(phone, msg, callback){
     // Configure the request payload
     let payload = {
       'From' : config.twilio.fromPhone,
-      'To' : '+54' + phone,
+      'To' : phone,
       'Body' : msg
     };
 

@@ -14,7 +14,7 @@ class Check{
   }
 
   static hasRequiredProperties(data){
-    return Check.isValidUserId(data.userId) 
+    return helpers.isNotEmptyString(data.userId) && data.userId.trim().length > 0
           && Check.isValidProtocol(data.protocol)
           && helpers.isNotEmptyString(data.url) 
           && Check.isValidMethod(data.method)
@@ -27,8 +27,18 @@ class Check{
     return helpers.createRandomString(this.username + this.password);
   }
 
-  static isValidUserId(userId){
-    return helpers.isNotEmptyString(userId) && userId.trim().length > 0;
+  static perform(check){
+    if(check){
+      check.id = check.id.trim();
+      if(check.userPhone)
+        check.userPhone = check.userPhone.trim();
+      
+      check.url = check.url.trim();
+    
+      check.state = helpers.isNotEmptyString(check.state) && helpers.contain(['up','down'] , check.state) 
+          ? check.state : 'down';
+    }
+    return check;
   }
 
   static isValidProtocol(protocol){
@@ -49,5 +59,5 @@ class Check{
 
 }
 
-// Export the User Model
+// Export the Check Model
 module.exports = Check;

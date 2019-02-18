@@ -366,6 +366,213 @@ With Twilio, we'll send SMS alerts to the users telling them if their checks are
 
 So, we are going to create a new function in the helpers to send an SMS message.
 
+```
+/*------------------------------------------------------**
+** Send an SMS message via Twilio                       **
+**------------------------------------------------------**
+* @param {String} phone: phone number                   **
+* @param {String} msg: the message we want to send      **
+**------------------------------------------------------*/
+helpers.sendTwilioSms = function(phone, msg, callback){
+  // Validate parameters
+  phone = typeof(phone) == 'string' && phone.trim().length == 11 ? phone.trim() : false;
+  msg = typeof(msg) == 'string' && msg.trim().length > 0 && msg.trim().length <= 1600 ? msg.trim() : false;
+
+  if(phone && msg){
+
+    // Configure the request payload
+    let payload = {
+      'From' : config.twilio.fromPhone,
+      'To' : '+54' + phone,
+      'Body' : msg
+    };
+
+    let stringPayload = querystring.stringify(payload);
+
+
+    // Configure the request details
+    var requestDetails = {
+      'protocol' : 'https:',
+      'hostname' : 'api.twilio.com',
+      'method' : 'POST',
+      'path' : '/2010-04-01/Accounts/' + config.twilio.accountSid + '/Messages.json',
+      'auth' : config.twilio.accountSid + ':' + config.twilio.authToken,
+      'headers' : {
+        'Content-Type' : 'application/x-www-form-urlencoded',
+        'Content-Length': Buffer.byteLength(stringPayload)
+      }
+    };
+
+    // Instantiate the request object
+    var req = https.request(requestDetails,function(res){
+        // Grab the status of the sent request
+        var status =  res.statusCode;        
+        // Callback successfully if the request went through
+        if(status == 200 || status == 201){
+          callback(false);
+        } else {
+          callback('Status code returned was '+ status);
+        }
+    });
+
+    // Bind to the error event so it doesn't get thrown
+    req.on('error',function(e){
+      callback(e);
+    });
+
+    // Add the payload
+    req.write(stringPayload);
+
+    // End the request
+    req.end();
+
+  } else {
+    callback('Given parameters were missing or invalid');
+  }
+};
+```
+
+The configuration vars used in this function are defined in the config.js file.
+
+## Background Workers
+Now, we need actually go about performing the checks the users created. And for that, we need background processes called workers.
+
+At this point, the nature of our application is fundamentally changing. We are going from the server that simply starts up and listens on a port to an application that starts up a server and starts up background workers and needs to be all ready for to do both at the same time.
+
+So, all the instructions we have now in the index file doesn't really work anymore. We need to start refactoring it. This index file will be much smaller when we'll simply call a server file to start up the server and then we'll call a workers file to start up the workers. In other words, this a whole bunch of refactoring we need to do right now.
+
+That's why the new index.js and server.js files will look like this:
+
+server.js
+```
+// Dependencies
+const http = require('http');
+const https = require('https');
+const StringDecoder = require('string_decoder').StringDecoder;
+
+const url = require('url');
+const path = require('path');
+const fs = require('fs');
+const config = require('./config/index');
+const router = require('./router');
+
+/*------------------------------------------------------**
+** Request handler on the server                        **
+**------------------------------------------------------*/
+
+const server = {};
+
+// Instantiate the HTTP server
+server.httpServer = http.createServer(function(req,res){
+   server.unifiedServer(req,res);
+ });
+
+ // Instantiate the HTTPS server
+server.httpsServerOptions = {
+   'key': fs.readFileSync(path.join(__dirname,'./https/key.pem')),
+   'cert': fs.readFileSync(path.join(__dirname,'./https/cert.pem'))
+ };
+
+ server.httpsServer = https.createServer(server.httpsServerOptions,function(req,res){
+   server.unifiedServer(req,res);
+ });
+
+server.unifiedServer = function(req, res) {
+  // Parse the url
+  const parsedUrl = url.parse(req.url, true);
+
+  // Get the path
+  const path = parsedUrl.pathname.replace(/^\/+|\/+$/g, '');  
+
+  // Get the method and headers
+  const method = req.method.toLowerCase(),
+    headers = req.headers;
+
+  // Get the payload, if any
+  const decoder = new StringDecoder('utf-8');
+  let buffer = '';
+
+  req.on('data', function(data) {
+    buffer += decoder.write(data);
+  });
+
+  req.on('end', function() {
+    buffer += decoder.end();
+
+    const data = {
+      req: req,
+      path: path,
+      queryStringObject: parsedUrl.query,   // get the query string as an object
+      method: method,
+      headers: headers,
+      payload: buffer,
+    };
+
+    // Route the request.
+    router.route(path, data, res);
+  });
+};
+
+server.init = function(){
+  // Start the HTTP server
+  server.httpServer.listen(config.httpPort,function(){
+    console.log('\x1b[36m%s\x1b[0m','The HTTP server is running on port '+config.httpPort);
+  });
+
+  // Start the HTTPS server
+  server.httpsServer.listen(config.httpsPort,function(){
+    console.log('\x1b[35m%s\x1b[0m','The HTTPS server is running on port '+config.httpsPort);
+  });
+}
+
+module.exports = server;
+```
+
+index.js
+
+```
+/*------------------------------------------------------**
+** Primary file for API                 				**
+**------------------------------------------------------*/
+
+// Dependencies
+const server = require('./server');  
+const workers = require('./workers');
+
+const app = {};
+
+// Init function
+app.init = function(){
+
+  // Start the server
+  server.init();
+
+  // Start the workers
+  workers.init();
+
+};
+
+// Self executing
+app.init();
+
+
+// Export the app
+module.exports = app;
+
+```
+
+Let's see the workers now. Workers are going actually to perform all the checking that has been configured by all the users. So, one of the things the workers are going to have to do is gather up all the checks stored in our checks collection.
+
+In this API the workers start getting all the available checks of our checks collection for alerting to the users about the state each one. And then, they will repeat this action every minute.
+
+```
+// workers.js
+
+
+
+
+```
+
 ## Contributing
 Fork this project
 Clone it from your Github profile

@@ -4,12 +4,10 @@
  */
 
  // Dependencies
-let https = require('https');
-let http = require('http');
 let _logs = require('./controllers/logs');
 let util = require('util');
 let debug = util.debuglog('workers');
-let _checkCtrl = require('./controllers/check');
+let _workerCtrl = require('./controllers/worker');
 
 // Instantiate the worker module object
 let workers = {};
@@ -17,62 +15,22 @@ let workers = {};
 // Lookup all checks, get their data, send to validator
 workers.gatherAllChecks = function(){
   // Get all the checks
-  _checkCtrl.getAll(function(err, originalCheckData){
-    if(!err && originalCheckData){
-      // Validate the check
-      if(_checkCtrl.isValid(originalCheckData)){                        
-        // Pass the data along to the next step in the process
-        workers.performCheck(_checkCtrl.setData(originalCheckData));
-      }else {
-        // Log the error and fail silently
-        debug("Error: one of the checks is not properly formatted. Skipping.");
-      }  
-    } else {
-      debug("Error reading one of the check's data: ",err);
-    }
+  _workerCtrl.getAvailableChecks(function(err, checks){    
+    if(!err && checks.length > 0){      
+      checks.forEach(function(check){        
+        if(_workerCtrl.isValidCheck(check)){          
+          // Pass the data along to the next step in the process
+          _workerCtrl.performCheck(check, workers.processCheckOutcome);          
+        }else
+          debug("Error: one of the checks is not properly formatted. Skipping.");
+      });
+    }else{
+      if(!err)
+        debug("Couldn't find any check to precess.");
+      else
+        debug("Error reading one of the check's data: ",err);  
+    }    
   });  
-};
-
-// Perform the check, 
-// send the originalCheck data and the outcome of the check process to the next step in the process
-workers.performCheck = function(originalCheckData){
-
-  // Prepare the intial check outcome
-  const checkOutcome = {
-    'error' : false,
-    'responseCode' : false,
-    'sent' : false // Mark that the outcome has not been sent yet
-  };  
-
-  // Construct the request
-  let requestDetails = _checkCtrl.setRequestDetail(originalCheckData);
-
-  // Instantiate the request object (using either the http or https module)
-  let _moduleToUse = originalCheckData.protocol == 'http' ? http : https;
-
-  let req = _moduleToUse.request(requestDetails, function(res){
-      // Grab the status of the sent request            
-      checkOutcome.responseCode = res.statusCode;
-      // Update the checkOutcome and pass the data along
-      checkOutcome = workers.processCheckOutcome(originalCheckData, checkOutcome);      
-  });
-
-  // Bind to the error event so it doesn't get thrown
-  req.on('error',function(e){
-    // Update the checkOutcome and pass the data along
-    checkOutcome.error = {'error' : true, 'value' : e};
-    checkOutcome = workers.processCheckOutcome(originalCheckData, checkOutcome);      
-  });
-
-  // Bind to the timeout event
-  req.on('timeout',function(){
-    // Update the checkOutcome and pass the data along
-    checkOutcome.error = {'error' : true, 'value' : 'timeout'};
-    checkOutcome = workers.processCheckOutcome(originalCheckData, checkOutcome);      
-  });
-
-  // End the request
-  req.end();
 };
 
 /*--------------------------------------------------------------**
@@ -80,52 +38,48 @@ workers.performCheck = function(originalCheckData){
 **--------------------------------------------------------------**
 * @param {Object} originalCheckData, checkOutcome               **
 **--------------------------------------------------------------*/
-workers.processCheckOutcome = function(originalCheckData,checkOutcome){
-  if(checkOutcome.sent)
-    return checkOutcome;
+workers.processCheckOutcome = function(originalCheckData,checkOutcome){  
+  if(!checkOutcome.sent){
+    // Decide if the check is considered up or down
+    let state = !checkOutcome.error && checkOutcome.responseCode && originalCheckData.successCodes.indexOf(checkOutcome.responseCode) > -1 ? 'up' : 'down',
+    // Decide if an alert is warranted
+      alertWarranted = originalCheckData.lastChecked && originalCheckData.state !== state;  
 
-  // Decide if the check is considered up or down
-  let state = !checkOutcome.error && checkOutcome.responseCode && originalCheckData.successCodes.indexOf(checkOutcome.responseCode) > -1 ? 'up' : 'down',
-  // Decide if an alert is warranted
-    alertWarranted = originalCheckData.lastChecked && originalCheckData.state !== state;  
+    // Log the outcome
+    let logData = {
+      'check' : originalCheckData,
+      'outcome' : checkOutcome,
+      'state' : state,
+      'alert' : alertWarranted,
+      'time' : Date.now()
+    };    
 
-  // Log the outcome
-  let logData = {
-    'check' : originalCheckData,
-    'outcome' : checkOutcome,
-    'state' : state,
-    'alert' : alertWarranted,
-    'time' : Date.now()
-  };
+    workers.log(logData);
 
-  workers.log(logData);
+    // Update the check data
+    var newCheckData = originalCheckData;
+    newCheckData.state = state;
+    newCheckData.lastChecked = logData.time;
 
-  // Update the check data
-  var newCheckData = originalCheckData;
-  newCheckData.state = state;
-  newCheckData.lastChecked = logData.time;
-
-  // Save the updates
-  _checkCtrl.update(newCheckData, function(err, checkData){
-    if(!err){
-      checkOutcome.sent = true;
-      if(alertWarranted){
-        let msg = 'Alert: Your check for '+newCheckData.method.toUpperCase()+' '+newCheckData.protocol+'://'+newCheckData.url+' is currently '+newCheckData.state;
-        _checkCtrl.sendNotification(newCheckData.userPhone, msg, function(err){
-          if(!err)
-            debug("Success: User was alerted to a status change in their check, via sms: ",msg);
-          else
-            debug("Error: Could not send sms alert to user who had a state change in their check",err);          
-        });
-      }else
-        debug("Check outcome has not changed, no alert needed");        
-    }else    
-      debug("Error trying to save updates to one of the checks");
-  });
-
-  return checkOutcome;
+    // Save the updates
+    _workerCtrl.updateCheck(newCheckData, function(err){
+      if(!err){
+        checkOutcome.sent = true;
+        if(alertWarranted){
+          let msg = 'Alert: Your check for '+newCheckData.method.toUpperCase()+' '+newCheckData.protocol+'://'+newCheckData.url+' is currently '+newCheckData.state;
+          _workerCtrl.sendNotification(newCheckData.userPhone, msg, function(err){
+            if(!err)
+              debug("Success: User was alerted to a status change in their check, via sms: ",msg);
+            else
+              debug("Error: Could not send sms alert to user who had a state change in their check",err);          
+          });
+        }else
+          debug("Check outcome has not changed, no alert needed");        
+      }else    
+        debug("Error trying to save updates to one of the checks");
+    });
+  }
 };
-
 
 /*--------------------------------------------------------------**
 ** Send check data to a log file                                **
@@ -136,7 +90,7 @@ workers.log = function(logData){
   // Convert the data to a string
   let logString = JSON.stringify(logData),
   // Determine the name of the log file
-    logFileName = originalCheckData.id;
+    logFileName = logData.check.id;
 
   // Append the log string to the file
   _logs.append(logFileName, logString, function(err){
@@ -196,6 +150,7 @@ workers.logRotationLoop = function(){
 workers.init = function(){
   // Send to console, in yellow
   console.log('\x1b[33m%s\x1b[0m','Background workers are running');
+
   // Execute all the checks immediately
   workers.gatherAllChecks();
   // Call the loop so the checks will execute later on
