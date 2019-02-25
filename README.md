@@ -568,11 +568,255 @@ In this API the workers start getting all the available checks of our checks col
 ```
 // workers.js
 
+/*
+ * Worker-related tasks
+ *
+ */
 
+ // Dependencies
+let _logs = require('./controllers/logs');
+let util = require('util');
+let debug = util.debuglog('workers');
+let _workerCtrl = require('./controllers/worker');
+
+// Instantiate the worker module object
+let workers = {};
+
+// Lookup all checks, get their data, send to validator
+workers.gatherAllChecks = function(){
+  // Get all the checks
+  _workerCtrl.getAvailableChecks(function(err, checks){    
+    if(!err && checks.length > 0){      
+      checks.forEach(function(check){        
+        if(_workerCtrl.isValidCheck(check)){          
+          // Pass the data along to the next step in the process
+          _workerCtrl.performCheck(check, workers.processCheckOutcome);          
+        }else
+          debug("Error: one of the checks is not properly formatted. Skipping.");
+      });
+    }else{
+      if(!err)
+        debug("Couldn't find any check to precess.");
+      else
+        debug("Error reading one of the check's data: ",err);  
+    }    
+  });  
+};
+
+/*--------------------------------------------------------------**
+** Process the check outcome, update the check data as needed   **
+**--------------------------------------------------------------**
+* @param {Object} originalCheckData, checkOutcome               **
+**--------------------------------------------------------------*/
+workers.processCheckOutcome = function(originalCheckData,checkOutcome){  
+  if(!checkOutcome.sent){
+    // Decide if the check is considered up or down
+    let state = !checkOutcome.error && checkOutcome.responseCode && originalCheckData.successCodes.indexOf(checkOutcome.responseCode) > -1 ? 'up' : 'down',
+    // Decide if an alert is warranted
+      alertWarranted = originalCheckData.lastChecked && originalCheckData.state !== state;  
+
+    // Log the outcome
+    let logData = {
+      'check' : originalCheckData,
+      'outcome' : checkOutcome,
+      'state' : state,
+      'alert' : alertWarranted,
+      'time' : Date.now()
+    };    
+
+    workers.log(logData);
+
+    // Update the check data
+    var newCheckData = originalCheckData;
+    newCheckData.state = state;
+    newCheckData.lastChecked = logData.time;
+
+    // Save the updates
+    _workerCtrl.updateCheck(newCheckData, function(err){
+      if(!err){
+        checkOutcome.sent = true;
+        if(alertWarranted){
+          let msg = 'Alert: Your check for '+newCheckData.method.toUpperCase()+' '+newCheckData.protocol+'://'+newCheckData.url+' is currently '+newCheckData.state;
+          _workerCtrl.sendNotification(newCheckData.userPhone, msg, function(err){
+            if(!err)
+              debug("Success: User was alerted to a status change in their check, via sms: ",msg);
+            else
+              debug("Error: Could not send sms alert to user who had a state change in their check",err);          
+          });
+        }else
+          debug("Check outcome has not changed, no alert needed");        
+      }else    
+        debug("Error trying to save updates to one of the checks");
+    });
+  }
+};
+
+/*--------------------------------------------------------------**
+** Send check data to a log file                                **
+**--------------------------------------------------------------**
+* @param {Object} logData                                       **
+**--------------------------------------------------------------*/
+workers.log = function(logData){  
+  // Convert the data to a string
+  let logString = JSON.stringify(logData),
+  // Determine the name of the log file
+    logFileName = logData.check.id;
+
+  // Append the log string to the file
+  _logs.append(logFileName, logString, function(err){
+    if(!err){
+      debug("Logging to file succeeded");
+    } else {
+      debug("Logging to file failed");
+    }
+  });
+};
+
+// Timer to execute the worker-process once per minute
+workers.loop = function(){
+  setInterval(function(){
+    workers.gatherAllChecks();
+  },1000 * 60);
+};
+
+// Rotate (compress) the log files
+workers.rotateLogs = function(){
+  // List all the (non compressed) log files
+  _logs.list(false,function(err,logs){
+    if(!err && logs && logs.length > 0){
+      logs.forEach(function(logName){
+        // Compress the data to a different file
+        var logId = logName.replace('.log','');
+        var newFileId = logId+'-'+Date.now();
+        _logs.compress(logId,newFileId,function(err){
+          if(!err){
+            // Truncate the log
+            _logs.truncate(logId,function(err){
+              if(!err){
+                debug("Success truncating logfile");
+              } else {
+                debug("Error truncating logfile");
+              }
+            });
+          } else {
+            debug("Error compressing one of the log files.",err);
+          }
+        });
+      });
+    } else {
+      debug('Error: Could not find any logs to rotate');
+    }
+  });
+};
+
+// Timer to execute the log-rotation process once per day
+workers.logRotationLoop = function(){
+  setInterval(function(){
+    workers.rotateLogs();
+  },1000 * 60 * 60 * 24);
+}
+
+// Init script
+workers.init = function(){
+  // Send to console, in yellow
+  console.log('\x1b[33m%s\x1b[0m','Background workers are running');
+
+  // Execute all the checks immediately
+  workers.gatherAllChecks();
+  // Call the loop so the checks will execute later on
+  workers.loop();
+  // Compress all the logs immediately
+  workers.rotateLogs();
+  // Call the compression loop so checks will execute later on
+  workers.logRotationLoop();
+};
+
+ // Export the module
+ module.exports = workers;
 
 
 ```
 
+## Creating routes for the API
+Let's begin refactoring our application, so it can support a web app interface and not just json API. 
+
+We start moving the api services up into the API directory, just to get out of the way of any other new user-facing that we will need for the web app. So, we are going to modify the services: users, tokens, and checks, so that they exist above in the "api" prefix.
+
+```
+const routerPaths = {
+  'api/users': _user.handlers,
+  'api/tokens': _token.handlers,
+  'api/checks': _check.handlers  
+};
+```
+
+In anticipation of the router we are going to build, we might as well fill out this router. We are going to add the path of a nature that we haven't seen before, and that is an empty string with its handler.
+
+Now, like any normal web app, we are going to have users who request the base directory (no path at all) and we will have to serve them the index file of the new website. So, for them, we are going to say: "if you request no path you should be served by the web handler".
+
+Now let's be out a few of the other once. Before the user can do anything, the user first needs to exist, and so the first route that we want beside the index is account/create. This is the path in the browser that the users will visit when they click on "Sign Up", and the handler will need to serve them in the HTML page showing them a sign-up form where they can fill information and sign up for a new account. 
+
+Once the users are inside their new account, they're going to need to be able to edit their setting, so we create a route called account/edit. And also the users will need to create (login in) or destroy (login out) a session at any time.
+
+```
+const routerPaths = {
+  '': _web.handlers,
+  'account/create': _web.accountCreate,
+  'account/edit': _web.accountEdit,
+  'account/deleted': _web.accountDeleted,
+  'session/create': _web.sessionCreate,
+  'session/deleted': _web.sessionDeleted,
+  'api/users': _user.handlers,
+  'api/tokens': _token.handlers,
+  'api/checks': _check.handlers  
+};
+```
+
+When they are sign-in and they want to create checks, the first thing we are going to need is to see the dashboard of their existed checks. This dashboard page will be called checks/all. Similary, we'll create the rest of the routes:
+
+```
+const routerPaths = {
+  '': _web.handlers,
+  'account/create': _web.accountCreate,
+  'account/edit': _web.accountEdit,
+  'account/deleted': _web.accountDeleted,
+  'session/create': _web.sessionCreate,
+  'session/deleted': _web.sessionDeleted,
+  'checks/all': _web.checksList,
+  'checks/create': _web.checksCreate,
+  'checks/edit': _web.checksEdit,
+  'api/users': _user.handlers,
+  'api/tokens': _token.handlers,
+  'api/checks': _check.handlers  
+};
+```
+
+Our app It only serves JSON type right now. We have to modify a little bit more the app so it can support HTML content type. Let's go to change the chooseHandler function in the router.js file for doing this. The function will look like this:
+```
+chosenHandler(data,function(statusCode, payload, contentType){
+
+    // Determine the tpe of response (fallback to json)
+    contentType = typeof(contentType) == 'string' ? contentType : 'json';
+    // Use the status code returned from the handler, or set the default status code to 200
+    statusCode = typeof(statusCode) == 'number' ? statusCode : 200;
+
+    // Return the response-parts that are content-specific
+    let payloadString = '';
+    if(contentType == 'json'){
+        res.setHeader('Content-Type', 'application/json');
+        // Use the payload returned from the handler, or set the default payload to an empty object
+        payload = typeof(payload) == 'object'? payload : {};        
+        payloadString = JSON.stringify(payload);
+    }else{
+        res.setHeader('Content-Type', 'text/html');
+        payloadString = typeof(payload) == 'string' ? payload : '';
+    }
+
+    // Return the response        
+    res.writeHead(statusCode);
+    res.end(payloadString);        
+}
+```
 ## Contributing
 Fork this project
 Clone it from your Github profile

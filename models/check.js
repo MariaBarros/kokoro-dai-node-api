@@ -14,7 +14,7 @@ class Check{
   }
 
   static hasRequiredProperties(data){
-    return helpers.isNotEmptyString(data.userId) && data.userId.trim().length > 0
+    return helpers.isNotEmptyString(data.username)
           && Check.isValidProtocol(data.protocol)
           && helpers.isNotEmptyString(data.url) 
           && Check.isValidMethod(data.method)

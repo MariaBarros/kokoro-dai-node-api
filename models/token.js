@@ -8,13 +8,15 @@ const helpers = require('../helpers/index');
 ** Class Token                                           **
 **------------------------------------------------------*/
 class Token{
-  constructor(userId, password){    
-    this.userId = helpers.isNotEmptyString(userId) ? userId.trim() : false;    
-    this.password = helpers.isNotEmptyString(password) ? password.trim() : false;        
+  constructor(username, password){    
+    this.username = helpers.isNotEmptyString(username) ? username.trim() : false;    
+    this.password = helpers.isNotEmptyString(password) ? password.trim() : false; 
+    if(this.password.length<24)
+      this.password = helpers.hash(this.password);
   }
 
   hasRequiredProperties(){
-    return this.userId && this.password;
+    return this.username && this.password;
   }
 
   setToken(){

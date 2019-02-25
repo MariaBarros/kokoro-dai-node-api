@@ -33,9 +33,9 @@ tokenCtrl.getOne = function(id, callback){
 *   - password                                          **
 **------------------------------------------------------*/
 tokenCtrl.create = function(data, callback){  
-  let token = new Token(data.userId, data.password);  
+  let token = new Token(data.username, data.password);  
   // Get user  
-  _userCtrl.getOne(token.userId, function(err, userData){
+  _userCtrl.getOne(token.username, function(err, userData){
     if(!err){      
       // Compare the sent password to the password stored in the user object              
       if(token.password == userData.password){
@@ -49,9 +49,9 @@ tokenCtrl.create = function(data, callback){
             callback(false, token);
         });        
       } else 
-        callback(403,{'Error' : 'Password did not match the specified user\'s stored password'});
+        callback(406,{'Error' : 'Password did not match the specified user\'s stored password'});
     }else
-      callback(err);
+      callback(404, err);
   });
 };
 

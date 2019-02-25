@@ -63,20 +63,23 @@ userCtrl.getOne = function(id, callback){
 *       are required                                    **
 **------------------------------------------------------*/
 userCtrl.create = function(userData, callback){
-  // Set user data and check for required field  
-  let user = new _User(userData.firstName, userData.lastName, userData.username, userData.password, userData.role);  
+  // Set user data and check for required field
+  if(!userData.role)
+    userData.role = 'Guest';
+  
+  let user = new _User(userData.firstName, userData.lastName, userData.username, userData.password, userData.phone, userData.role);
   user.setPassword();
   if(user.hasRequiredProperties()){    
     // Create a new user
     user.id = user.setId();
-    _store.create(_User.getDataSource(), user.id, user, function(err){
+    _store.create(_User.getDataSource(), user.username, user, function(err){
       if(!err)
-        callback(false,{message : `The new user ${user.username} with the id ${user.id} was created`});
+        callback(false,{message : `The new user ${user.username} was created`});
       else 
         callback(err);
     });          
   }else
-    callback(true,{'message' : 'Missing data for update.'});
+    callback(true,{'message' : 'Missing data for create the account.'});
 };
 
 /*------------------------------------------------------**
@@ -90,14 +93,16 @@ userCtrl.create = function(userData, callback){
 **------------------------------------------------------*/
 userCtrl.update = function(userData, callback){      
   // Get the user and update
-  this.getOne(userData.id, function (err, user) {
-    if(!err){
+  this.getOne(userData.username, function (err, user) {
+    if(!err){      
       let editedUser = { ...user,  ...userData };
+      if(editedUser._method)
+        delete editedUser._method;
       
       if(userData.password)
         editedUser.password = helpers.hash(userData.password)
       
-      _store.update(_User.getDataSource(), user.id, editedUser, function(err){
+      _store.update(_User.getDataSource(), user.username, editedUser, function(err){
         if(!err)
           callback(false, {'message': `The user ${user.username} was updated`});    
         else
@@ -105,7 +110,7 @@ userCtrl.update = function(userData, callback){
       });      
     }
     else
-      callback({'message' : 'The user does not exist'});
+      callback(404,{'message' : 'The user does not exist'});
   });  
 };
 

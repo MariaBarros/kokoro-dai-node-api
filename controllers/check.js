@@ -59,10 +59,12 @@ checkCtrl.getOne = function(id,callback){
 *   - {String} userId: user id related to the check     **
 **------------------------------------------------------*/
 checkCtrl.create = function(data, callback){
-  if(!_Check.hasRequiredProperties(data))
+  if(!_Check.hasRequiredProperties(data)){
     callback(406,{message: "Missing data for create the check"});
+    return
+  }
   
-  _userCtrl.getOne(data.userId, function(err, userData){
+  _userCtrl.getOne(data.username, function(err, userData){
     if(!err){
       let userChecks = typeof(userData.checks) == 'object' && userData.checks instanceof Array ? userData.checks : [];
       if(userChecks.length < config.maxChecks){
@@ -95,8 +97,10 @@ checkCtrl.create = function(data, callback){
 * @param {Object} data: Info about the request Object   **
 **------------------------------------------------------*/
 checkCtrl.update = function(check, callback){
-  if(!_Check.hasRequiredProperties(check))
+  if(!_Check.hasRequiredProperties(check)){
     callback(406,{message: "Missing or invalid data for update the check"});
+    return
+  }
   
   _store.update(_Check.getDataSource(), check.id, check, function(err){
     if(!err){      

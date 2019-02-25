@@ -8,12 +8,14 @@ const helpers = require('../helpers/index');
 ** Class User                                           **
 **------------------------------------------------------*/
 class User{
-  constructor(firstName, lastName, username, password, role){
+  constructor(firstName, lastName, username, password, phone, role){
     this.firstName = helpers.isNotEmptyString(firstName) ? firstName.trim() : false;
     this.lastName = helpers.isNotEmptyString(lastName) ? lastName.trim() : false;
     this.username = helpers.isNotEmptyString(username) ? username.trim() : false;
-    this.password = helpers.isNotEmptyString(password) ? password.trim() : false;
+    this.password = helpers.isNotEmptyString(password) ? password.trim() : false;    
     this.role = helpers.isNotEmptyString(role) ? role.trim() : false;
+    if(helpers.isNotEmptyString(phone))
+      this.phone = phone.trim();
   }
 
   setId(){
