@@ -49,7 +49,7 @@ tokenCtrl.create = function(data, callback){
             callback(false, token);
         });        
       } else 
-        callback(406,{'Error' : 'Password did not match the specified user\'s stored password'});
+        callback(406,{'Error' : 'Password did not match the specified user\'s stored password' + userData.password + "-" + token.password + "- "+ data.password});
     }else
       callback(404, err);
   });

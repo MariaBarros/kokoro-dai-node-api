@@ -66,7 +66,7 @@ app.bindForms = function(){
       // Call the API
       app.client.request(optionRequest, function(statusCode, responsePayload){      
         // Display an error on the form if needed
-        console.log(statusCode, responsePayload)
+        console.log(formId, statusCode, responsePayload)
         if(statusCode !== 200){
           if(statusCode == 403){
             // log the user out
@@ -78,7 +78,7 @@ app.bindForms = function(){
             setters.showError(`#${formId} .formError`, error);
           }
         } else {
-          // If successful, send to form response processor        
+          // If successful, send to form response processor                  
           app.formResponseProcessor(formId,optionRequest.payload,responsePayload);
         }
       });
@@ -96,7 +96,7 @@ app.formResponseProcessor = function(formId, requestPayload, responsePayload){
   // If login was successful, set the token in localstorage and redirect the user
   if(formId == 'sessionCreate'){        
     app.config.sessionToken = setters.setSessionToken(responsePayload);      
-    //window.location = '/checks/all';
+    window.location = '/checks/all';
   }
 
   // If forms saved successfully and they have success messages, show them
@@ -111,8 +111,8 @@ app.formResponseProcessor = function(formId, requestPayload, responsePayload){
     window.location = '/account/deleted';
   }
 
-  // If the user just created a new check successfully, redirect back to the dashboard
-  if(formId == 'checksCreate'){
+  // If the user just created a new check or edited a chech successfully, redirect back to the dashboard
+  if(formId == 'checksCreate' || formId == 'checksEdit1'){
     window.location = '/checks/all';
   }
 };

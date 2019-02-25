@@ -99,7 +99,7 @@ userCtrl.update = function(userData, callback){
       if(editedUser._method)
         delete editedUser._method;
       
-      if(userData.password)
+      if(userData.password && userData.password.length<24)
         editedUser.password = helpers.hash(userData.password)
       
       _store.update(_User.getDataSource(), user.username, editedUser, function(err){

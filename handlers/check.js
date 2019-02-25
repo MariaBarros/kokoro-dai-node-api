@@ -111,7 +111,7 @@ _checks.get = function(data, headers, callback){
 *   - {String} data.id: check's id                              **
 **--------------------------------------------------------------*/
 _checks.put = function(data, headers, callback){
-  let id = typeof(data.id) == 'string' ? data.id.trim() : false,
+  let id = typeof(data.uid) == 'string' ? data.uid.trim() : false,
     token = headers.token && typeof(headers.token) == 'string' ? headers.token.trim() : false;
 
   if(!token){
