@@ -1,11 +1,11 @@
 /*------------------------------------------------------**
 ** Dependencies - Handlers                              **
 **------------------------------------------------------*/
-const _user = require('./handlers/user');
-const _token = require('./handlers/token');
-const _check = require('./handlers/check');
-const _web = require('./handlers/web');
-const _cart = require('./handlers/cart');
+const _user = require('./lib/handlers/user');
+const _token = require('./lib/handlers/token');
+const _check = require('./lib/handlers/check');
+const _web = require('./lib/handlers/web');
+const _cart = require('./lib/handlers/cart');
 
 const errorHandlers = {
   notFound: function(data, response) {

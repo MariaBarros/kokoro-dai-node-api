@@ -10,7 +10,7 @@ const StringDecoder = require('string_decoder').StringDecoder;
 const url = require('url');
 const path = require('path');
 const fs = require('fs');
-const config = require('./config/index');
+const config = require('./lib/config/index');
 const router = require('./router');
 
 /*------------------------------------------------------**

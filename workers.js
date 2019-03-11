@@ -4,10 +4,10 @@
  */
 
  // Dependencies
-let _logs = require('./controllers/logs');
+let _logs = require('./lib/controllers/logs');
 let util = require('util');
 let debug = util.debuglog('workers');
-let _workerCtrl = require('./controllers/worker');
+let _workerCtrl = require('./lib/controllers/worker');
 
 // Instantiate the worker module object
 let workers = {};
