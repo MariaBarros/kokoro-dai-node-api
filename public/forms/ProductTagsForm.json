@@ -1,0 +1,18 @@
+{"fields":
+[{"name": "product_id",
+"type": "int(11)",
+"is_required": true, 
+"class": "col-xs-6",
+"label": "product_id",
+"validation":[
+{"validator": "required", "error": "Ingrese"}
+]},
+{"name": "tag_id",
+"type": "int(11)",
+"is_required": true, 
+"class": "col-xs-6",
+"label": "tag_id",
+"validation":[
+{"validator": "required", "error": "Ingrese"}
+]}]
+}

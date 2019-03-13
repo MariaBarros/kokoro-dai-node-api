@@ -1,0 +1,11 @@
+{"fields":
+[{"name": "category",
+"type": "varchar",
+"maxlength":"60",
+"is_required": true, 
+"class": "col-xs-6",
+"label": "category",
+"validation":[
+{"validator": "required", "error": "Ingrese"}
+]}]
+}

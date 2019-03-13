@@ -1,0 +1,88 @@
+<auth-current-comp user=$ctrl.user></auth-current-comp>
+<div class="top-bar">
+    <div class="container">
+        <div class="top-bar-inner">
+            <div class="top-bar-module heading-module hidden-mobile">
+                <div class="module-text">
+                    Panel de Administración de Contenidos - MAYSSA
+                </div>
+            </div>
+            <div class="top-bar-module heading-module">
+                <div class="module-menu">
+                    <ul id="menu-top-bar-menu" class="top-bar-menu">                        
+                        <li id="menu-item-1826" class="menu-item menu-item-type-custom menu-item-object-custom">                            
+                            <a ng-if="$ctrl.user" href="user/{{$ctrl.user.id}}"> 
+                              ¡Hola {{$ctrl.user.name}}!
+                            </a>
+                        </li>
+                        <li class="social-item">
+                          <a href="user/{{$ctrl.user.id}}"> Mi Cuenta</a>
+                        </li>
+                        <li ng-if="$ctrl.user.isSuper == true" class="social-item">
+                          <a href="users">Usuarios</a>              
+                        </li>
+                        <li ng-if="$ctrl.user.isSuper == true" class="social-item">
+                          <a href="modules">Módulos</a>
+                        </li>
+                        <li>
+                          <a href="javascript:void;" ng-click="$ctrl.logout();">Cerrar Sesión <span class="fa fa-sign-out-alt"></span></a>
+                      </li>          
+                    </ul>
+                </div>
+            </div>            
+        </div>
+    </div>
+</div>
+<div class="middle-section-header hidden-mobile">
+    <div class="container">
+        <div class="middle-section-inner">
+            <div class="middle-bar-module heading-module logo">
+                <div class="logo-image">
+                    <!--<a href="http://www.miamotors.com.ar/" class="custom-logo-link" rel="home">
+                        <img height="100" src="../images/logo.png" class="custom-logo" alt="" />
+                    </a>-->
+                </div>
+            </div>
+            <div class="middle-bar-module heading-module">
+                <ul class="icon-graphic icon-align-right">
+                    <li>                        
+                        <div class="graphic-cell">
+                            <span class="info-title"><a href="products" style="color: #c11016;">Productos</a></span>
+                            <span class="info-label"><a href="products">Gestión de Modelos</a></span>
+                        </div>
+                    
+                    </li>                                        
+                    <li>                        
+                        <div class="graphic-cell">
+                            <span class="info-title"><a href="news" style="color: #c11016;">News</a></span>
+                            <span class="info-label"><a href="news">Gestión de novedades</a></span>
+                        </div>
+                    </li>                    
+                </ul>
+            </div>            
+        </div>
+    </div>
+    <hr style="margin-top: 0">
+</div>
+<div class="container">
+<div class="module-main-menu">
+    <!--MainMenu-->
+    <ul class="main-menu navbar-collapse collapse">                        
+        <li class="menu-item menu-item-type-post_type menu-item-object-page>" ng-class="{'current-menu-parent': $ctrl.isActive('/panel')}">
+            <a href="panel">Panel</a>
+        </li>
+        <li class="menu-item menu-item-type-post_type menu-item-object-page" ng-class="{'current-menu-parent': $ctrl.isActive('/products')}">
+            <a href="products">Productos</a>
+        </li>
+        
+        <li class="menu-item menu-item-type-post_type menu-item-object-page" ng-class="{'current-menu-parent': $ctrl.isActive('/news')}">
+            <a href="news">Novedades</a>
+        </li>        
+        
+        <li class="menu-item menu-item-type-post_type menu-item-object-page" ng-class="{'current-menu-parent': $ctrl.isActive('/suscribers')}">
+            <a href="suscribers">Suscripciones</a>
+        </li>
+    </ul>
+    <!--/MainMenu-->
+    </div>
+</div>

@@ -1,0 +1,42 @@
+{"fields": [
+	{
+		"name": "name",
+		"type": "varchar",
+		"maxlength":"80",
+		"is_required": true, 		
+		"label": "Nombre",
+		"validation":[
+			{"validator": "required", "error": "Ingrese"}
+		]
+	},
+	{
+		"name": "email",
+		"type": "varchar",
+		"maxlength":"80",
+		"is_required": true, 		
+		"label": "Correo Electrónico",
+		"validation":[
+			{"validator": "required", "error": "Ingrese"}
+		]
+	},
+	{
+		"name": "phone",
+		"type": "varchar",
+		"maxlength":"80",
+		"is_required": false, 		
+		"label": "Teléfono",
+		"validation":[
+			{"validator": "", "error": ""}
+		]
+	},
+	{
+		"name": "observations",
+		"type": "varchar",
+		"type_varchar": "textarea",
+		"is_required": false, 		
+		"label": "Consulta",
+		"validation":[
+			{"validator": "", "error": ""}
+		]
+	}]
+}

@@ -1,0 +1,43 @@
+<loading-comp loading="$ctrl.loading.processing" message="$ctrl.loading.message" load-class="loader-dark loader-content"></loading-comp>
+
+<div ng-if="$ctrl.loading.processing==false" class="row">
+  <!--LangManager-->
+  <div ng-if="$ctrl.options.multilingual == true" class="col-xs-12">
+    <div class="btn-group pull-right" role="group" aria-label="Menu language">
+      <button type="button" ng-repeat="lan in $ctrl.languages" 
+        class="btn btn-sm" ng-click="$ctrl.lan = lan.code" 
+        ng-class="{'btn-primary': $ctrl.lan == lan.code, 'btn-default': $ctrl.lan== lan.code}">
+        {{lan.language}}
+      </button>  
+    </div>
+  </div>
+  <!--/LangManager-->
+
+  <h4 ng-if="$ctrl.options.title" class="col-xs-12">{{$ctrl.options.title}}</h4>
+  <!--Form-->
+  <form method="{{$ctrl.options.method}}" name="{{$ctrl.formName}}" ng-submit="$ctrl.submitForm()" enctype="multipart/form-data" novalidate>  
+    <!--Fields-->
+    <span ng-repeat="field in $ctrl.fields" class="flex-column col-xs-12 {{field.class}}">
+      <field-form-comp ng-if="field.name" name="{{field.name}}"
+        field-type="{{field.type}}" 
+        field="field"         
+        item="$ctrl.item">          
+      </field-form-comp>      
+    </span>
+    <!--/Fields-->
+    
+    <!--Form's Controls-->
+    <div class="col-xs-12" style="margin-top: 30px;">
+      <div ng-if="$ctrl.form.$pristine == false && $ctrl.form.$valid == true && $ctrl.options.messageForSave== true" class="alert alert-info form-item-margin-top" style="width: auto; float: left; clear: both;">
+        <p>Presione <strong>Aceptar</strong> para guardar los cambios.</p>
+      </div>
+      <div style="width: 100%; float: left;">
+        <button class="btn btn-secondary" type="submit" ng-disabled="$ctrl.loading.processing">Aceptar</button>
+        <button ng-disabled="$ctrl.cancelEnabled" class="btn btn-default" type="button" ng-click="$ctrl.redirect()" ng-disabled="$ctrl.loading.processing">Cancelar</button>   
+      </div>
+      
+    </div>   
+    <!--/Form's Controls-->
+  </form>
+  <!--/Form-->
+</div>

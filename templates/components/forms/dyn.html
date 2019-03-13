@@ -1,0 +1,34 @@
+<md-input-container 
+	class="md-block {{$ctrl.field.classControl}}" 
+	ng-class="{'hidden': ($ctrl.field.lan && $ctrl.field.lan != $ctrl.parent.lan) || $ctrl.field.display == false}">
+
+	<label>{{$ctrl.field.label}}</label>
+
+	<input 
+		id="{{$ctrl.name}}" 
+		aria-label="{{$ctrl.field.label}}" 
+		ng-model="$ctrl.item[$ctrl.name]"
+		ng-attr-name="{{$ctrl.name}}" 
+		ng-pattern="$ctrl.field.pattern"
+		class="col-xs-12" 
+		dyn-attrs 
+		dyns="{{$ctrl.field.dyns}}" 
+		item-id = "{{$ctrl.item.id}}"
+		ng-required="($ctrl.field.conditional_required) ? $ctrl.execFunction($ctrl.field.conditional_required) : $ctrl.field.is_required" 
+		ng-disabled="{{$ctrl.field.disabled}}" 
+		ng-change="$ctrl.trigger()" 
+		ui-mask="{{$ctrl.field.mask}}"
+		md-no-asterisk >
+
+	<!--Set value from object-->
+	<item-set-comp ng-if="$ctrl.field.object" 
+    	set="$ctrl.item[$ctrl.name]" 
+    	value="$ctrl.item[$ctrl.object][$ctrl.name]">
+	</item-set-comp>
+	<!--/Set value from object-->
+
+	<!--Errors-->
+	<div ng-include="'templates/components/error-message.html'"
+		style="position: absolute; top:27.5%; left: 70%;"></div>
+	<!--/Errors-->
+</md-input-container>

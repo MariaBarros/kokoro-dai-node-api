@@ -1,0 +1,54 @@
+<!--<form method="post" enctype="multipart/form-data">-->
+
+  <div class="el-btn" ng-if="$ctrl.sizeCollection == 1">
+
+    <div class="btn btn-sm shape-square btn-skin-default-ghost" 
+      ngf-select="$ctrl.upload($file)" ng-model="$ctrl.file" name="file"       
+      ngf-accept="'{{$ctrl.options.pattern}}'">
+
+        <span class="glyphicon" ng-class="{'glyphicon-picture': $ctrl.options.type=='image', 'glyphicon-file': $ctrl.options.type=='file',  'glyphicon-music': $ctrl.options.type=='sound'}"></span>
+
+       Seleccionar <span ng-if="$ctrl.options.type=='image'">imagen</span>
+       <span ng-if="$ctrl.options.type=='file'">archivo</span>
+       <span ng-if="$ctrl.options.type=='sound'">archivo de sonido</span>
+
+    </div>
+
+    <p ng-if="$ctrl.filed == true" style="color: red;">
+      Seleccione 
+      <span ng-if="$ctrl.options.type == 'image'">una imagen</span>
+      <span ng-if="$ctrl.options.type == 'file' || $ctrl.options.type =='sound'">
+        un archivo
+      </span> para subir con un tamaño menor a {{$ctrl.options.maxSize}}.
+    </p>    
+
+  </div>
+
+  <div ng-if="$ctrl.sizeCollection > 1" class="button" 
+    ng-model="$ctrl.files"
+    ngf-drop="$ctrl.upload($files)" 
+    ngf-select="$ctrl.upload($files)" 
+    ng-model="$ctrl.files" class="drop-box" 
+    ngf-drag-over-class="'dragover'" 
+    
+    ngf-accept="{{$ctrl.options.pattern}}"
+    ngf-multiple="true" >
+      Arrastre aquí los archivos o haga click para seleccionalos
+      <div ngf-no-file-drop>Este navegador no soporta Drag/Drop. Haga click para seleccionar los archivos</div>
+  </div>  
+
+<!--
+Audio preview: <audio controls ngf-src="$ctrl.file"></audio>
+Video preview: <video controls ngf-src="$ctrl.file"></video>
+-->
+
+ <!--</form>-->
+
+<!--Loading-->  
+  <div class="row" ng-if="$ctrl.loading.processing==true">            
+    <div class="container-loading">
+      <loading-comp loading="$ctrl.loading.processing" message="$ctrl.loading.message" load-class="loader-dark loader-mini"></loading-comp>
+    </div>              
+  </div>
+<!--/Loading-->
+<mess-comp></mess-comp>

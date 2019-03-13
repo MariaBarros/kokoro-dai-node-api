@@ -1,0 +1,119 @@
+<input type="hidden" ng-required="$ctrl.field.is_required" 	name="{{$ctrl.name}}" ng-model="$ctrl.item[$ctrl.name]"> 
+<!--Permissions-->
+<auth-current-comp ng-if="$ctrl.field.module" is-auth="$ctrl.permission" module="{{$ctrl.field.module}}"></auth-current-comp>
+<!--/Permissions-->
+
+<div class="row" style="padding-top: 10px; padding-bottom: 10px;"
+	ng-if="($ctrl.field.show_if) ? $ctrl.showIf($ctrl.field.show_if) && (!$ctrl.permission.required || $ctrl.permission.all || $ctrl.permission.canView) : !$ctrl.permission.required || $ctrl.permission.all || $ctrl.permission.canView">
+	<div class="col-xs-12">
+		<button type="button" ng-if="$ctrl.field.collapsed == true" class="btn btn-link pull-right" ng-click="$ctrl.field.isCollapsed = !$ctrl.field.isCollapsed;">		
+			<span ng-if="$ctrl.field.isCollapsed == true"><span class="glyphicon glyphicon-menu-down"></span> Mostrar {{$ctrl.field.collapse_label}}</span>
+			<span ng-if="$ctrl.field.isCollapsed == false"><span class="glyphicon glyphicon-menu-up"></span> Ocultar {{$ctrl.field.collapse_label}}</span>
+		</button>
+	</div>
+	<div class="col-xs-12" ng-class="{'collection-collapsed closed': $ctrl.field.collapsed && $ctrl.field.isCollapsed == true, 'collection-collapsed open': $ctrl.field.collapsed && $ctrl.field.isCollapsed == false}" ng-init="$ctrl.field.isCollapsed = true">
+		<label>{{$ctrl.field.label}}</label>		
+
+		<!--Empty Collection-->		
+		<div class="alert alert-warning" ng-if="!$ctrl.item[$ctrl.name] || $ctrl.item[$ctrl.name].length == 0">Sin datos registrados</div>
+		<!--/Empty Collection-->
+
+		<!-- Collection-->
+		<span ng-if="$ctrl.field.customTemplate && $ctrl.item[$ctrl.name].length > 0">
+			<div dir-paginate="el in $ctrl.item[$ctrl.name] | itemsPerPage: $ctrl.size" current-page="1" pagination-id="collection_{{$ctrl.name}}" style="padding-top: 10px; padding-bottom: 10px;">
+				<div ng-include="'templates/' + $ctrl.field.customTemplate"></div>
+			</div>			
+		</span>
+		
+		<table class="table table-bordered" ng-if="$ctrl.item[$ctrl.name].length > 0 && !$ctrl.field.customTemplate">		
+			<!--Header-->
+			<tr class="table-header" ng-if="$ctrl.collection.header">
+		  		<td ng-repeat="header in $ctrl.collection.header">{{header}}</td>
+		  		<td>Acción</td>  		
+		  	</tr>
+			<!--/Header-->
+			<!--Collection's list-->
+		    <tr class="table-content" dir-paginate="el in $ctrl.item[$ctrl.name] | itemsPerPage: 10" current-page="1" pagination-id="collection_{{$ctrl.name}}">
+		    	<td ng-repeat="label in $ctrl.collection.dataLabel" class="{{label.class}}" ng-class="{'line-through': el.deleted == true}">    		
+				    <span ng-if="!label.filter && !label.collection">
+				    	{{el[label.reference]}}
+				    </span>
+				    <span ng-if="label.filter" ng-switch on="label.filter">
+				    	<span ng-switch-when="asDate">{{el[label.reference] | asDate}}</span>
+				    	<span ng-switch-when="date">{{el[label.reference] | date: 'dd/MM/yyyy'}}</span>
+				    	<span ng-switch-when="datetime">{{el[label.reference] | date: 'dd/MM/yyyy HH:mm'}}hs</span>
+				    	<span ng-switch-when="price">$ {{el[label.reference] || 0}}</span>
+				    	<span ng-switch-when="filterHour">{{el[label.reference] | filterHour}}hs</span>
+				    	<span ng-switch-when="sbool">
+				    		<span ng-if="!label.valueForTrue">{{el[label.reference] | sbool}}</span>
+				    		<span ng-if="label.valueForTrue">{{el[label.reference] | sbool:label.valueForTrue:label.valueForFalse}}</span>
+				    	</span>
+				    </span>
+				    
+				    <ul ng-if="label.collection == true && label.dataLabel && el[label.reference].length>0" class="list-unstyled {{label.class}}">				    	
+						<li ng-repeat="elCol in el[label.reference]">
+							<span ng-if="label.dataLabel" dyn-labels labels="label.dataLabel" source="elCol" complete-label="elCol.completeLabel">
+								{{elCol.completeLabel}}
+							</span>
+						</li>
+					</ul>
+					<span ng-if="label.collection == true && label.label && el[label.reference].length>0" class="list-unstyled {{label.class}}" 
+						ng-include="'templates/' + label.label + '.html'">
+					</span>
+				</td>
+
+				<td>
+					<!--Edit-->
+		  			<button type="button" class="btn btn-link" ng-if="$ctrl.nestedForm"  				
+		  				ng-disabled="el.delete == true || (!$ctrl.permission.required && !$ctrl.permission.all && !$ctrl.permission.canUpdate)"
+		  				ng-click="el.$index = $index; $ctrl.showForm = true; $ctrl.itemCollection = el; " title="Editar">
+		  				<span class="glyphicon glyphicon-pencil"></span>
+				    </button>
+					<!--/Edit-->
+					<!--Remove-->
+				    <button type="button" class="btn btn-link" ng-init="el.deleted = false" title="Eliminar" 
+				    	ng-click="el.deleted = !el.deleted"
+				    	ng-disabled="(!$ctrl.permission.required && !$ctrl.permission.all && !$ctrl.permission.canUpdate) || (el.id && !$ctrl.permission.canDelete && !$ctrl.permission.all)">
+						<!--Remove label-->
+				    		<span class="glyphicon" ng-class="{'glyphicon-remove': !el.deteted, 'glyphicon-ok': el.deleted == true}"></span>
+						<!--/Remove label-->
+				    </button>
+				    <!--/Remove-->
+				</td>
+			</tr>
+			<!-- Pagination -->
+			<div ng-if="$ctrl.item[$ctrl.name].length > 0" class="text-center">
+				<dir-pagination-controls boundary-links="true" pagination-id="'collection_' + $ctrl.name" template-url="templates/components/pagination.html"></dir-pagination-controls>
+			</div>
+			<!--/Pagination-->
+			<!--/Collection's list-->
+		</table>
+		<!--/Collection-->		
+
+		<!--Add-->
+		<button ng-if="$ctrl.nestedForm && !$ctrl.collection.removeAdd" type="button" class="btn btn-default bg-color-light-gray btn-form-border" 
+		   	ng-disabled="$ctrl.permission.required == true && !$ctrl.permission.all && !$ctrl.permission.canInsert"        	
+		   	ng-click="$ctrl.showForm = true; $ctrl.itemCollection = {}" title="Agregar">
+		   	<!--Button label-->
+		   	<span class="glyphicon glyphicon-plus"></span> {{$ctrl.collection.button_label || 'Agregar'}}
+			<!--/Button label-->
+		</button>
+		<!--/Add-->
+	</div>
+</div>
+<!--Errors-->
+<div ng-include="'public/angular/templates/error-message.html'"></div>
+<!--/Errors-->
+
+<!--Nested Form-->
+<div ng-if="$ctrl.showForm" ng-class="{'modal-form': $ctrl.nestedForm.modal == true, 'static-form': !$ctrl.nestedForm.modal || $ctrl.nestedForm.modal == false}">
+    <div>
+        <form-comp form-name="{{$ctrl.nestedForm.form}}" 
+        	item="$ctrl.itemCollection" 
+        	open="$ctrl.showForm" 
+            options="{redirect: false, router: $ctrl.nestedForm.router, saveBefore: false, params: $ctrl.setParams($ctrl.nestedForm.params), multilingual: $ctrl.collection.multilingual, title: $ctrl.nestedForm.title}" 
+            on-save="$ctrl.item[$ctrl.name] = $ctrl.parent.add($event, $ctrl.item[$ctrl.name])" >  
+        </form-comp>               
+    </div>
+</div>
+<!--/Nested Form-->

@@ -1,0 +1,127 @@
+<label>{{$ctrl.field.label}}</label>
+<input type="hidden" name="{{$ctrl.name}}" ng-required="$ctrl.field.is_required" ng-model="$ctrl.item[$ctrl.name]"> 
+
+<!--Errors-->
+<div ng-include="'public/angular/templates/error-message.html'"></div>
+<!--/Errors-->
+
+<!--Permissions-->
+<auth-current-comp is-auth="$ctrl.permission" module="{{$ctrl.field.module}}"></auth-current-comp>  
+<!--/Permissions-->
+
+<!--Search-->
+<div ng-if="$ctrl.showIf($ctrl.field.showIf)" class="bg-color-light-gray form-item-padding-top form-item-bottom-top" 
+	style="width:100%; float: left;">
+	<!--Options for searching-->
+	<button ng-if="$ctrl.field.options" ng-init="$ctrl.optionSelected = $ctrl.field.options[0]" ng-repeat="option in $ctrl.field.options" 		
+		type="button" class="btn btn-sm" ng-click="$ctrl.optionSelected = option" 
+		ng-class="{'btn-primary': $ctrl.optionSelected.action == option.action, 'btn-default': $ctrl.optionSelected.action != option.action}">
+		{{option.label}}
+	</button>		
+	<button ng-if="!$ctrl.field.options" type="button" class="btn btn-sm btn-primary" onclick="$('#search').blur()">Buscar</button>		
+	<!--/Options for searching-->
+	<!--Add-->			
+	<button type="button" style="margin-left: 20px;" class="btn btn-link btn-sm bg-color-light-gray btn-form-border" 
+	   	ng-disabled="$ctrl.permission.required == true && !$ctrl.permission.all && !$ctrl.permission.canInsert"
+	   	ng-click="$ctrl.showForm = true; $ctrl.item[$ctrl.name] = {}; $ctrl.item[$ctrl.name][$ctrl.optionSelected.param] = $ctrl.search">
+   		<span class="glyphicon glyphicon-plus"></span> Nuevo
+	</button>
+	<!--/Add-->		
+
+	<!--Input search-->
+	<md-input-container md-no-float class="md-block col-sm-6 text-left" 
+		style="margin-bottom: 0; margin-top: 0;">
+		<div class="input-group" style="width: 95%;">
+  			<input type="search" id="search" name="search" ng-model="$ctrl.search" get-object placeholder="{{$ctrl.optionSelected.placeholder || '12456789 o López'}}" aria-label="Buscar"			
+			router="{{$ctrl.name}}" 
+			action="{{$ctrl.optionSelected.action || 'getByIdentifier'}}"			
+			selection="$ctrl.selection">			
+		</div>		
+	</md-input-container>
+	<!--/Input search-->
+	
+</div>
+<!--/Search-->
+
+<ul class="list-unstyled">
+	<li ng-if="$ctrl.selection.length>1">
+		<h5 class="alert alert-warning" style="margin-top: 20px; width: 100%; float: left;">
+			<span class="glyphicon glyphicon-warning-sign"></span> Se encontró más de un resultado con el criterio de búsqueda, <strong>seleccione uno</strong>
+		</h5>
+	</li>
+    <li ng-if="$ctrl.selection.length>1" ng-repeat="sel in $ctrl.selection">
+		<!--Selection from search-->		
+	    <button type="button" class="btn btn-link bg-color-light-gray" ng-click="$ctrl.item[$ctrl.name] = sel; $ctrl.selection = null" style="margin-bottom: 5px;">
+	       	{{sel[$ctrl.object.label]}}        	
+	    </button>
+	    <!--/Selection from search-->
+    </li>
+    <!--Empty Selection-->	
+    <li ng-if="$ctrl.selection.length == 0" style="width: 100%; text-align: center;">    	
+    	<div class="alert alert-warning" role="alert" style="margin: 10px auto; width: 100%; float: left;">
+    		<span class="glyphicon glyphicon-warning-sign"></span> <strong>No se encontraron resultados</strong> que coincidan con el término de búsqueda 
+			<!--Add-->			
+		    <button type="button" style="margin-left: 20px;" class="btn btn-link btn-sm bg-color-light-gray btn-form-border" 
+		       	ng-disabled="$ctrl.permission.required == true && !$ctrl.permission.all && !$ctrl.permission.canInsert"
+		       	ng-click="$ctrl.showForm = true; $ctrl.item[$ctrl.name] = {}; $ctrl.item[$ctrl.name][$ctrl.optionSelected.param] = $ctrl.search">
+		       	<span class="glyphicon glyphicon-plus"></span> Nuevo
+		    </button>
+		    <!--/Add-->		
+    	</div>			
+    </li>
+    <!--/Empty Selection-->	
+</ul>
+
+<!--Set Object value-->
+<item-set-comp ng-if="$ctrl.selection.length == 1" set="$ctrl.item[$ctrl.name]" value="$ctrl.setSelection($ctrl.selection[0])"></item-set-comp>
+<!--/Set Object value-->
+
+<!--Object selected-->
+<ul class="bg-color-light-gray list-unstyled flex flex-inline align-center" ng-if="($ctrl.item[$ctrl.name] && $ctrl.selection.length>0) || ($ctrl.item[$ctrl.name] && !$ctrl.selection)" style="padding: 20px;">
+
+	<li ng-if="$ctrl.object.icon && $ctrl.item[$ctrl.name][$ctrl.object.icon]" class="cover-image rounded" 
+		style="background-image: url('../uploads/images/{{$ctrl.object.iconDir}}/{{$ctrl.item[$ctrl.name][$ctrl.object.icon]}}'); width: 90px; height: 90px; border-radius: 50%; margin: 5px;">
+	</li>
+
+	<li ng-if="$ctrl.object.icon && !$ctrl.item[$ctrl.name][$ctrl.object.icon]" class="rounded flex bg-color-primary flex-inline align-center" style="font-size: 150%; width: 70px; height: 70px;">
+		<decore-item-list item="{{$ctrl.item[$ctrl.name][$ctrl.object.fields[1].name] + ' ' + $ctrl.item[$ctrl.name][$ctrl.object.fields[2].name]}}" on-load="$ctrl.ico = $event.label"></decore-item-list>
+		{{$ctrl.ico}}
+	</li>
+	<li>	
+		<ul class="list-unstyled flex align-center" style="display: inherit;">
+			<li ng-repeat="f in $ctrl.object.fields" class="col-xs-12 {{f.class}}">
+
+				<label>{{f.label}}</label> 
+				<md-input-container md-no-float class="md-block text-left" style="margin-bottom: 0; margin-top: 0;">         
+
+					<input class="col-xs-12" ng-required="f.is_required" ng-disabled="f.disabled" md-no-asterisk aria-label="{{f.label}}"
+					name="{{ $ctrl.name + f.name }}" maxlength="{{f.maxlength}}" 
+					ng-model="$ctrl.item[$ctrl.name][f.name]">
+				</md-input-container>
+
+				<div ng-messages="$ctrl.parent.form[$ctrl.name + f.name].$error">      
+			    	<div ng-repeat="err in f.validation" ng-message="{{err.validator}}">{{err.error}}.</div>   
+			    </div>
+			</li>
+		</ul>
+	</li>
+	<li style="display: inline-flex; margin-left: 10px;">
+		<button ng-if="!$ctrl.field.edit_hidden" class="btn btn-link bg-color-light-gray btn-form-border" type="button" ng-click="$ctrl.showForm = true;">
+			<span class="glyphicon glyphicon-pencil"></span> Editar
+		</button>	
+	</li>
+</ul>
+<!--/Object selected-->
+
+<!--Nested Form-->
+<div ng-if="$ctrl.showForm" ng-class="{'modal-form': $ctrl.nestedForm.modal == true, 'static-form': !$ctrl.nestedForm.modal || $ctrl.nestedForm.modal == false}">
+    <div>                  
+        <form-comp form-name="{{$ctrl.nestedForm.form}}" 
+        	item="$ctrl.item[$ctrl.name]" 
+        	open="$ctrl.showForm" 
+            options="{redirect: $ctrl.nestedForm.redirect || false, router: $ctrl.nestedForm.router, saveBefore: $ctrl.nestedForm.saveBefore || false, params: $ctrl.operation.params, multilingual: $ctrl.nestedForm.multilingual, title: $ctrl.nestedForm.title}"
+            on-save="$ctrl.selection.push($event.item); ">
+        </form-comp>        
+    </div>
+</div>
+<!--/Nested Form-->

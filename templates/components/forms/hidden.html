@@ -1,0 +1,14 @@
+<span ng-switch on="$ctrl.field.type_hidden">
+	<input ng-switch-default type="hidden" 
+	name="{{$ctrl.name}}" 
+	ng-model="$ctrl.item[$ctrl.name]"
+	ng-required="$ctrl.field.is_required">
+	
+	<span ng-switch-when="currentUser">
+		<auth-current-comp user="$ctrl.user"></auth-current-comp>
+		<item-set-comp set="$ctrl.item[$ctrl.name]" value="$ctrl.user.id"></item-set-comp>
+	</span>
+</span>
+<!--Errors-->
+<div ng-include="'templates/components/error-message.html'"></div>
+<!--/Errors-->

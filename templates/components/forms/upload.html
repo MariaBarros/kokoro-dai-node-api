@@ -1,0 +1,33 @@
+<md-input-container class="md-block {{$ctrl.field.classControl}}">
+	
+	<label style="margin-bottom: 30px;">{{$ctrl.field.label}}</label>          
+
+	<input type="hidden" name="{{$ctrl.name}}" 
+		ng-required="$ctrl.field.is_required"		
+		maxlength="{{$ctrl.field.maxlength}}" 
+		ng-model="$ctrl.item[$ctrl.name]">
+	
+	<!--Errors-->
+	<div ng-include="'templates/components/error-message.html'"></div>
+	<!--/Errors-->	
+
+	<ul class="list-unstyled">
+		<li ng-if="$ctrl.item[$ctrl.name] && $ctrl.field.options.type == 'image'">
+			<div class="cover-image" 
+				style="width: auto; height: 300px; background-position: 0% 50%; background-image: url({{'../uploads/' + $ctrl.field.options.destination + '/' + $ctrl.item[$ctrl.name]}});">
+			</div>
+			
+		</li>	
+		<li ng-if="$ctrl.item[$ctrl.name]">
+			Archivo seleccionado <br> {{$ctrl.item[$ctrl.name]}}
+		</li>
+		<li>
+			<uploader-comp  
+				file="$ctrl.item[$ctrl.name]" 
+				size-collection="{{$ctrl.field.sizeCollection}}"
+				options="$ctrl.options">
+			</uploader-comp>
+		</li>
+	</ul>
+
+</md-input-container>

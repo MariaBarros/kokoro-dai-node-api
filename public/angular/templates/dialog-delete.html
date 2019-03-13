@@ -1,0 +1,29 @@
+<h3>{{$ctrl.title}}</h3>
+<p class="alert alert-warning"><span class="glyphicon glyphicon-warning-sign"></span> <strong>Atención</strong>. ¿Confirma eliminar el siguiente registro?</p>
+
+<!--Fields-->
+<div ng-repeat="field in $ctrl.fields">
+  <div ng-switch on="field.type" class="{{field.class}}">      
+    <label>{{field.label}}</label>
+    <span ng-switch-when="asDate">
+      {{$ctrl.item[field.name] | asDate}}
+    </span>
+    <span ng-switch-when="filterHour">{{$ctrl.item[field.name] | filterHour}}hs</span>
+    <span ng-switch-when="sbool">
+      <span ng-if="!label.valueForTrue">{{$ctrl.item[field.name] | sbool}}</span>
+      <span ng-if="label.valueForTrue">{{$ctrl.item[field.name] | sbool:label.valueForTrue:label.valueForFalse}}</span>
+    </span>      
+    <div ng-switch-when="image">
+      <img alt="" class="image-responsive" ng-src={{$ctrl.item[field.name]}} />
+    </div>
+    <span ng-switch-default>
+      {{$ctrl.item[field.name]}}
+    </span>
+  </div>
+</div>
+<!--/Fields-->
+    
+<div class="col-xs-12" style="margin-top: 40px; padding-left: 0;">
+  <button class="btn btn-primary" type="button" ng-click="$ctrl.delete($ctrl.item.id)">Eliminar</button>
+  <button class="btn btn-default" type="button" ng-click="$ctrl.open = false">Cancelar</button>
+</div>

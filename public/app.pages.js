@@ -60,13 +60,17 @@ app.loadAccountEditPage = function(){
 ** Load the dashboard page specifically                         **
 **--------------------------------------------------------------*/
 app.loadChecksListPage = function(){
-  // Get the phone number from the current token, or log the user out if none is there  
+  // Get the phone number from the current token, or log the user out if none is there
+  app.getSessionToken();
+  console.log(app.config)  
+
   if(validators.isString(app.config.sessionToken.username)){
     // Fetch the user data
     let queryStringObject = {
       'id' : app.config.sessionToken.username
     };
     app.client.request({'path':'api/users','queryStringObject':queryStringObject},function(statusCode, responsePayload){
+      console.log(statusCode)
       if(statusCode == 200){
         // Determine how many checks the user has
         let allChecks = validators.isObject(responsePayload.checks) && responsePayload.checks instanceof Array && responsePayload.checks.length > 0 ? responsePayload.checks : [];
@@ -117,8 +121,8 @@ app.loadChecksListPage = function(){
         // If the request comes back as something other than 200, log the user our (on the assumption that the api is temporarily down or the users token is bad)
         app.logUserOut();
     });
-  } else
-    app.logUserOut();
+  } //else
+    //app.logUserOut();
 };
 
 // Load the checks edit page specifically

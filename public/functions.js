@@ -148,10 +148,44 @@ setters.requestAction = function(action, method){
 }
 
 // Set the session token in the app.config object as well as localstorage
-setters.setSessionToken = function(token){
-  //app.config.sessionToken = token;
+setters.setSessionToken = function(token){  
   var tokenString = JSON.stringify(token);
   localStorage.setItem('token', tokenString);  
   setters.setLoggedInClass(validators.isObject(token));  
   return token;
 };
+
+setters.multifilters = function(){
+  currentCollection =  array;
+    const filterKeys = Object.keys(filters);
+    // filters all elements passing the criteria
+    return array.filter((item) => {    
+    // dynamically validate all filter criteria    
+    return filterKeys.every((key) => {      
+      if (!filters[key]) 
+        return true; // passing an empty filter means that filter is ignored.
+      else     
+        return setters.filterFnc(filters[key], key, item);
+      });
+    })
+}
+
+setters.filterFnc = function(){
+  let match = null;
+    let filters = this.filters
+    switch(filter.operator){
+      case "<=":
+          match = item[key] <= filter.value
+          break;
+      case ">=":
+          match = item[key] >= filter.value
+          break;
+      case "reg":
+          let reg = new RegExp("\\b"+filter.value+"\\b");        
+          match = reg.test(item[key])          
+          break;
+      default:
+        match = !!~filters[key].indexOf(item[key]);
+    }    
+    return match;
+}

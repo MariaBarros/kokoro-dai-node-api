@@ -1,0 +1,36 @@
+<label>{{$ctrl.field.label}}</label>
+<input type="hidden" ng-required="$ctrl.field.is_required" name="{{$ctrl.name}}" 
+ng-model="$ctrl.item[$ctrl.name]"> 
+
+<item-set-comp ng-if="$ctrl.item.filter" set="$ctrl.operation.filter" value="$ctrl.item.filter"></item-set-comp>
+
+<!--List-->
+<list-comp template="{{$ctrl.collection.template}}" 
+    action="{{$ctrl.collection.action}}" 
+    params="{{$ctrl.setParams($ctrl.collection.params)}}" 
+    item="$ctrl.operation"
+    router="{{$ctrl.collection.router}}"
+    list="$ctrl.item[$ctrl.name]">
+</list-comp>
+<!--/List-->
+
+<!--Errors-->
+<div ng-include="'public/angular/templates/error-message.html'"></div>
+<!--/Errors-->
+
+<!--Nested Form-->
+<div ng-if="$ctrl.nestedForm">    
+    <!--Nested Form-->
+    <div ng-if="$ctrl.operation.edit == true" class="modal-form">
+        <div class="modal-inner" >                  
+            <form-comp form-name="{{$ctrl.nestedForm.form}}" 
+            	item="$ctrl.operation.selected" 
+            	open="$ctrl.operation.edit" 
+                options="{redirect: false, router: $ctrl.nestedForm.router, saveBefore:true, params: $ctrl.setParams($ctrl.nestedForm.params), 
+                multilingual: $ctrl.nestedForm.multilingual, title: $ctrl.collection.title}"
+                on-save="$ctrl.parent.add($event, $ctrl.item[$ctrl.name], $ctrl.nestedForm.relation)">  
+            </form-comp>               
+        </div>
+    </div>    
+</div>
+<!--/Nested Form-->

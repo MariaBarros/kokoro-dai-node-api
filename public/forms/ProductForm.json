@@ -1,0 +1,102 @@
+{"fields":
+[{"name": "brand_id",
+"type": "int(11)",
+"is_required": true, 
+"class": "col-xs-6",
+"label": "brand_id",
+"validation":[
+{"validator": "required", "error": "Ingrese"}
+]},
+{"name": "category_product_id",
+"type": "int(11)",
+"is_required": true, 
+"class": "col-xs-6",
+"label": "category_product_id",
+"validation":[
+{"validator": "required", "error": "Ingrese"}
+]},
+{"name": "product_name",
+"type": "varchar",
+"maxlength":"80",
+"is_required": true, 
+"class": "col-xs-6",
+"label": "product_name",
+"validation":[
+{"validator": "required", "error": "Ingrese"}
+]},
+{"name": "product_description",
+"type": "text",
+"is_required": true, 
+"class": "col-xs-6",
+"label": "product_description",
+"validation":[
+{"validator": "required", "error": "Ingrese"}
+]},
+{"name": "product_resume",
+"type": "text",
+"is_required": false, 
+"class": "col-xs-6",
+"label": "product_resume",
+"validation":[
+{"validator": "", "error": ""}
+]},
+{"name": "product_thumb",
+"type": "varchar",
+"maxlength":"69",
+"is_required": false, 
+"class": "col-xs-6",
+"label": "product_thumb",
+"validation":[
+{"validator": "", "error": ""}
+]},
+{"name": "product_available",
+"type": "tinyint(1)",
+"is_required": true, 
+"class": "col-xs-6",
+"label": "product_available",
+"validation":[
+{"validator": "required", "error": "Ingrese"}
+]},
+{"name": "product_pdf",
+"type": "varchar",
+"maxlength":"69",
+"is_required": false, 
+"class": "col-xs-6",
+"label": "product_pdf",
+"validation":[
+{"validator": "", "error": ""}
+]},
+{"name": "user_id",
+"type": "varchar",
+"maxlength":"64",
+"is_required": true, 
+"class": "col-xs-6",
+"label": "user_id",
+"validation":[
+{"validator": "required", "error": "Ingrese"}
+]},
+{"name": "created_at",
+"type": "datetime",
+"is_required": false, 
+"class": "col-xs-6",
+"label": "created_at",
+"validation":[
+{"validator": "", "error": ""}
+]},
+{"name": "updated_at",
+"type": "datetime",
+"is_required": false, 
+"class": "col-xs-6",
+"label": "updated_at",
+"validation":[
+{"validator": "", "error": ""}
+]},
+{"name": "default_model_id",
+"type": "int(11)",
+"is_required": true, 
+"class": "col-xs-6",
+"label": "default_model_id",
+"validation":[
+{"validator": "required", "error": "Ingrese"}
+]}]
+}

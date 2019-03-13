@@ -181,7 +181,7 @@ app.init = function(){
 
   if(form)
     // Bind all form submissions
-    app.bindForms();  
+    //app.bindForms();  
 
   // Get the token from localstorage
   app.getSessionToken();

@@ -1,0 +1,25 @@
+{"fields": [
+	{
+		"name": "name",
+		"type": "varchar",
+		"maxlength":"80",
+		"is_required": true, 		
+		"label": "Nombre",
+		"validation":[
+			{"validator": "required", "error": "Ingrese"}
+		]
+	},
+	{
+		"name": "email",
+		"type": "varchar",
+		"pattern":"^(\\w[\\._]*)+@[a-zA-Z_]+?\\.[a-zA-Z]{2,7}$",
+		"maxlength":"80",
+		"is_required": true, 		
+		"label": "Correo Electrónico",
+		"validation":[
+			{"validator": "required", "error": "Ingrese"},
+			{"validator": "pattern", "error": "Ingrese un correo válido"},
+			{"validator": "maxlength", "error": "Hasta 80 caracteres"}
+		]
+	}]
+}

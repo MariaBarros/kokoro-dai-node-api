@@ -1,0 +1,11 @@
+{"fields":
+[{"name": "tag",
+"type": "varchar",
+"maxlength":"80",
+"is_required": true, 
+"class": "col-xs-6",
+"label": "tag",
+"validation":[
+{"validator": "required", "error": "Ingrese"}
+]}]
+}
