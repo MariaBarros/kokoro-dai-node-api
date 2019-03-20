@@ -1,7 +1,7 @@
 <h1>Dashboard</h1>
 <h2>You may create up to 5 checks</h2>
 <hr />
-
+<h2 style="margin-top: 50px;">Pure Javascript version</h2>
 <table id="checksListTable">
   <tr>
     <th>Method</th>
@@ -13,13 +13,46 @@
   <tr id="noChecksMessage">
     <td colspan="5">You have no checks, please create one!</td>
   </tr>
-
 </table>
 
-<list-comp router="api/users" params="id={{$ctrl.getLoguedUser()}}" on-get="$ctrl.user = $event.res">
-  
+<h2 style="margin-top: 50px;">Angular version</h2>
+<!--Show messages-->
+<mess></mess>
+<!--Get authenticated user-->
+<auth-user user="$ctrl.userAuth"></auth-user>
+<!--Get user checks-->
+<list-comp ng-if="$ctrl.userAuth" 
+  router="api/users" params="{id: $ctrl.userAuth}" 
+  on-get="$ctrl.user = $event.res">
 </list-comp>
+<!--No checks-->
 <p ng-if="$ctrl.user && !$ctrl.user.checks">You have no checks, please create one!</p>
+
+
+<div ng-if="$ctrl.user && $ctrl.user.checks">  
+  <p>You have {{$ctrl.user.checks.length}} checks</p>
+  <table>
+  <tr>
+    <th>Method</th>
+    <th>Protocol</th>
+    <th>URL</th>
+    <th>State</th>
+    <th>Details</th>
+  </tr>
+  <tr ng-repeat="itemCheck in $ctrl.user.checks" ng-init="$ctrl.param={id:itemCheck}">
+    <!--Get check data-->
+    <list-comp router="api/checks" params="$ctrl.param"
+      on-get="$ctrl.itemCheck = $event.res">  
+    </list-comp>
+    <!--Show check detail-->
+    <td>{{$ctrl.itemCheck.method}}</td>
+    <td>{{$ctrl.itemCheck.protocol}}://</td>
+    <td>{{$ctrl.itemCheck.url}}</td>
+    <td>{{$ctrl.itemCheck.state}}</td>
+    <td><a href="/checks/edit?id={{itemCheck}}">View / Edit / Delete</a></td>    
+  </tr>
+</table>
+</div>
 
 <div id="createCheckCTA" class="ctaWrapper">
   <a class="cta green" href="checks/create">Create a Check</a>

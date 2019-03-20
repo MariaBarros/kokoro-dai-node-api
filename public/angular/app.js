@@ -2,7 +2,8 @@
 
 angular.module('app', [])
 
-.config(function(appConfigProvider) {	
+.config(function(appConfigProvider, formConfigProvider) {	
   //appProvider.setPathCtrl('server/controller/');  
-  appConfigProvider.setLan('es');  
+  formConfigProvider.setLan('es');  
+  formConfigProvider.setPathForm('public/forms');
 });

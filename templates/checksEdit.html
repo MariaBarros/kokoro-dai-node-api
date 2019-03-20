@@ -5,7 +5,7 @@
 <h2>Edit the check details</h2>
 
 <div class="formWrapper">
-  <form id="checksEdit1" action="/api/checks" method="PUT">
+  <form id="checksEdit" action="/api/checks" method="PUT" callback-page="/checks/all">
     <input type="hidden" name="_method" value="PUT"/>
     <div class="formError"></div>
     <div class="formSuccess">Your Changes Have Been Saved</div>
@@ -13,12 +13,12 @@
 
     <div class="inputWrapper">
       <div class="inputLabel">Check ID</div>
-      <input class="disabled displayIdInput" type="text" name="displayId" disabled />
+      <input class="disabled idInput" type="text" name="displayId" disabled />
     </div>
 
     <div class="inputWrapper">
       <div class="inputLabel">Current State</div>
-      <input class="disabled displayStateInput" type="text" name="displayState" disabled />
+      <input class="disabled stateInput" type="text" name="displayState" disabled />
     </div>
 
     <div class="inputWrapper">
@@ -61,7 +61,7 @@
 
     <div class="inputWrapper">
       <div class="inputLabel">Timeout</div>
-      <select class="timeoutInput intval" name="timeoutSeconds">
+      <select class="timeoutSecondsInput intval" name="timeoutSeconds">
         <option value="1">1 second</option>
         <option value="2">2 seconds</option>
         <option value="3">3 seconds</option>
@@ -80,7 +80,7 @@
 <hr />
 <h2>Delete The Check</h2>
 <div class="formWrapper">
-  <form id="checksEdit2" action="/api/checks" method="DELETE">
+  <form id="checksEdit2" action="/api/checks" method="DELETE" callback-page="/checks/all">
     <input type="hidden" name="_method" value="DELETE"/>
     <div class="formError"></div>
     <div class="warning">Warning: This action cannot be undone. Dont click this button on accident!</div>

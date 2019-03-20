@@ -57,7 +57,7 @@ app.bindForms = function(){
       let formId = this.id,
         method = this._method && this._method.value ? this._method.value : this.method,
         optionRequest = setters.requestAction(this.action, method.toUpperCase());
-        // Turn the inputs into a payload
+      // Turn the inputs into a payload
       optionRequest.payload = setters.turnInputsIntoPayload({}, this.elements);
 
       // Hide the error message (if it's currently shown due to a previous error)
@@ -66,17 +66,8 @@ app.bindForms = function(){
       // Call the API
       app.client.request(optionRequest, function(statusCode, responsePayload){      
         // Display an error on the form if needed
-        console.log(formId, statusCode, responsePayload)
         if(statusCode !== 200){
-          if(statusCode == 403){
-            // log the user out
-            //app.logUserOut();          
-          } else{
-            // Try to get the error from the api, or set a default error message            
-            let error = validators.isString(responsePayload.message) ? responsePayload.message : 'An error has occured, please try again';
-            // Set the formError field with the error text
-            setters.showError(`#${formId} .formError`, error);
-          }
+          app.formResponseError(formId, statusCode, responsePayload);
         } else {
           // If successful, send to form response processor                  
           app.formResponseProcessor(formId,optionRequest.payload,responsePayload);
@@ -86,35 +77,41 @@ app.bindForms = function(){
   }
 };
 
+// Display error on the form
+app.formResponseError = function(formId, statusCode, response){
+  if(statusCode == 403){
+    // log the user out
+    app.logUserOut();
+  } else{
+    // Try to get the error from the api, or set a default error message            
+    let error = validators.isString(response.message) ? response.message : 'An error has occured, please try again';
+    // Set the formError field with the error text
+    setters.showError(`#${formId} .formError`, error);
+  }
+};
+
 // Form response processor
-app.formResponseProcessor = function(formId, requestPayload, responsePayload){
-  let functionToCall = false;  
-  if(formId == 'accountCreate'){    
-    window.location = '/account/created';
-  }
-
+app.formResponseProcessor = function(formId, requestPayload, responsePayload){    
   // If login was successful, set the token in localstorage and redirect the user
-  if(formId == 'sessionCreate'){        
-    app.config.sessionToken = setters.setSessionToken(responsePayload);      
-    window.location = '/checks/all';
-  }
+  if(formId == 'sessionCreate')
+    app.config.sessionToken = setters.setSessionToken(responsePayload);
 
-  // If forms saved successfully and they have success messages, show them
-  var formsWithSuccessMessages = ['accountEdit1', 'accountEdit2'];
-  if(formsWithSuccessMessages.indexOf(formId) > -1){
-    document.querySelector(`#${formId} .formSuccess`).style.display = 'block';
-  }
-
-  // If the user just deleted their account, redirect them to the account-delete page
-  if(formId == 'accountEdit3'){
+  // If the user just deleted their account, redirect them to the account-deleted page
+  if(formId == 'accountDelete')
     app.logUserOut(false);
-    window.location = '/account/deleted';
-  }
-
-  // If the user just created a new check or edited a chech successfully, redirect back to the dashboard
-  if(formId == 'checksCreate' || formId == 'checksEdit1'){
-    window.location = '/checks/all';
-  }
+  else{
+    let form = document.querySelector(`#${formId}`);
+    let successMsg = document.querySelector(`#${formId} .formSuccess`);
+    if(form){
+      // If the form has success messages, show them      
+      if(successMsg)
+        successMsg.style.display = 'block';
+      // If form has a callback page, redirect to it
+      let redirect = form.getAttribute("callback-page");
+      if(redirect)
+        window.location = redirect;
+    }  
+  }  
 };
 
 // Get the session token from localstorage and set it in the app.config object
@@ -147,7 +144,7 @@ app.renewToken = function(callback){
       if(statusCode == 200){
         // Get the new token details
         let queryStringObject = {'id' : currentToken.tokenId};
-        app.client.request({'path': 'api/tokens', 'method': 'GET', 'queryStringObject': queryStringObject}, function(statusCode, responsePayload){
+        app.client.request({'path': 'api/tokens', 'queryStringObject': queryStringObject}, function(statusCode, responsePayload){
           // Display an error on the form if needed
           let success = statusCode == 200;          
           app.config.sessionToken = setters.setSessionToken(success ? responsePayload : false);  
@@ -177,14 +174,13 @@ app.tokenRenewalLoop = function(){
 
 // Init (bootstrapping)
 app.init = function(){
-  let form = document.querySelector("form");    
-
-  if(form)
-    // Bind all form submissions
-    //app.bindForms();  
+  // Bind all form submissions
+  let form = document.querySelector("form");      
+  if(form)    
+    app.bindForms();  
 
   // Get the token from localstorage
   app.getSessionToken();
-  // Renew token
+  // Renew token process
   app.tokenRenewalLoop();
 };

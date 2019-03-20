@@ -72,7 +72,6 @@ setters.ajaxPrepare = function(url, method, headers, callback){
       }
     }
   };
-
   return xhr;
 }
 

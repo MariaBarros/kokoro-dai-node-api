@@ -1,4 +1,4 @@
-function FormCompCtrl($location, appConfig, DataFactory, FormFactory, MessFactory) {
+function FormCompCtrl($location, formConfig, DataFactory, FormFactory, MessFactory) {
   /*------------------------------------------------------------------------------*/
   /* Get form's fields                                                            */
   /*------------------------------------------------------------------------------*/
@@ -37,7 +37,8 @@ function FormCompCtrl($location, appConfig, DataFactory, FormFactory, MessFactor
     doAction = (item) => {
       item = FormFactory.mergeJson(item, this.sections);
       this.loading = MessFactory.loading("Processing...");
-      DataFactory.request(this.options.request, this.item).then(
+      this.options.request.payload = this.item;
+      DataFactory.request(this.options.request).then(
         res => {          
           console.log(res);          
           finish(item, res);
@@ -53,9 +54,9 @@ function FormCompCtrl($location, appConfig, DataFactory, FormFactory, MessFactor
   /* Check if the form is multilingual and get the form's fields                  */
   /*------------------------------------------------------------------------------*/
   this.$onInit = () => {
-    this.lan = appConfig.lan;
-    this.languages = appConfig.languajes;
-    getForm(appConfig.pathForms + "/" + this.formName);
+    this.lan = formConfig.lan;
+    this.languages = formConfig.languajes;
+    getForm(`${formConfig.pathForms}/${this.formName}`);
   };
 
   /*------------------------------------------------------------------------------*/
@@ -95,11 +96,10 @@ function FormCompCtrl($location, appConfig, DataFactory, FormFactory, MessFactor
       this.form.$$parentForm.$submitted = false;
 
     if (this.form.$valid) {
-      //this.loading = MessFactory.loading("Processing...");
-      if (this.options.request.path){        
+      if (this.options.request.path)        
         doAction(this.item);
-      }
-      else finish(this.item);
+      else 
+        finish(this.item);
     }
   };
 
@@ -121,7 +121,7 @@ function FormCompCtrl($location, appConfig, DataFactory, FormFactory, MessFactor
   };
 }
 
-function FieldFormCtrl(DataFactory, FormFactory, MessFactory, appConfig) {
+function FieldFormCtrl(DataFactory, FormFactory, MessFactory, formConfig) {
   this.operation = { edit: false, selected: {} };
   this.permission = { require: false };
 
@@ -130,7 +130,7 @@ function FieldFormCtrl(DataFactory, FormFactory, MessFactory, appConfig) {
   /* @params: section JSON file that contains the fields collection               */
   /*------------------------------------------------------------------------------*/
   let getSection = section => {
-    let sectionName = `${appConfig.pathForms}/Sections/${section.source}`;
+    let sectionName = `${formConfig.pathForms}/Sections/${section.source}`;
     DataFactory.getJson(sectionName).then(
       response => { section.fields = response.data; },
       error =>{
@@ -351,16 +351,4 @@ angular
     require: {
       parent: "^^formComp"
     }
-  })
-  .component("authComp",{
-    templateUrl:"public/angular/templates/auth.html",
-    controller: function(appConfig){
-      this.auth = (response) =>{
-        if(response.data.tokenId){
-          app.config.sessionToken = setters.setSessionToken(response.data);                
-          setters.setLoggedInClass(validators.isObject(response.data)); 
-          window.location = "checks/all"
-        }        
-      }
-    }    
   });

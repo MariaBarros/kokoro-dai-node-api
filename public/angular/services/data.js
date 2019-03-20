@@ -37,7 +37,7 @@ function DataFactory ($http, $filter, appConfig, $q) {
     return $filter('paramFormat')(data)   
   }; 
 
-  _data.request = function(optionRequest, data){
+  _data.request = function(optionRequest){
     // Merge optionRequest with default values
     optionRequest = setters.setRequest(optionRequest);    
 
@@ -47,7 +47,7 @@ function DataFactory ($http, $filter, appConfig, $q) {
     let req = {method: optionRequest.method, 
       url: requestUrl, 
       headers: {'Content-Type': 'application/json'},
-      data: data};        
+      data: optionRequest.payload};        
     
     // Get token
     let sessionToken = appConfig.getSessionToken();
@@ -55,6 +55,7 @@ function DataFactory ($http, $filter, appConfig, $q) {
       req.headers.token = sessionToken.tokenId
     }    
     // Make the request, return a promise
+    console.log(req)
     return $http(req);    
   }
 

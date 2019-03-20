@@ -23,11 +23,10 @@ function CollectionController () {
   }
 };
 
-function SelCompCtrl(DataFactory, MessFactory, appConfig) {
+function SelCompCtrl(DataFactory, MessFactory) {
   this.size = 10;
   this.page = 1;
-  let currentAction,
-    currentParams = "-";
+  let currentParams = {};
 
   /*------------------------------------------------------------------------------*/
   /* select function. Get collection                                              */
@@ -36,15 +35,15 @@ function SelCompCtrl(DataFactory, MessFactory, appConfig) {
   /*------------------------------------------------------------------------------*/
   this.select = router => {
     this.loading = MessFactory.loading("Loading...");    
-    currentParams = this.params;
+    currentParams = this.params;    
     DataFactory.request({path: router, queryStringObject: this.params}).then(
       response => {
-        this.list = response.data;
+        this.list = response.data;             
         this.loading = MessFactory.loaded();
         if (this.onGet) this.onGet({ $event: { res: this.list } });        
       },
       error => {
-        this.loading = MessFactory.add({ type: "danger", description: "Error al intentar recuperar los datos" });
+        this.loading = MessFactory.add({ type: "danger", description: "Error on getting data" });
       }
     );
   };
@@ -56,7 +55,8 @@ function SelCompCtrl(DataFactory, MessFactory, appConfig) {
   /* params string/object for filter collection                                   */
   /*------------------------------------------------------------------------------*/
   this.$onChanges = obj => {    
-    this.select(this.router);
+    if(this.params && JSON.stringify(currentParams) !== JSON.stringify(this.params))
+      this.select(this.router);
   };
 
   /*------------------------------------------------------------------------------*/
@@ -79,11 +79,7 @@ function SelCompCtrl(DataFactory, MessFactory, appConfig) {
       ids += ids != "" ? "," + el[field] : el[field];
     });
     return ids;
-  };
-
-  this.getLoguedUser = ()=>{
-    return appConfig.sessionToken.username
-  }
+  };  
 
   this.clearFilter = collection => {
     collection.map(el => {
@@ -107,7 +103,7 @@ angular
 .component("listComp", {
   controller: SelCompCtrl,
   bindings: {    
-    params: "@",
+    params: "<",    
     router: "@",
     onGet: "&?"
   }
@@ -117,7 +113,7 @@ angular
   templateUrl: "public/angular/templates/checkbox.html",
   controller: SelCompCtrl,
   bindings: {    
-    params: "@",
+    params: "<",
     router: "@",
     caption: "@",
     field: "@",
