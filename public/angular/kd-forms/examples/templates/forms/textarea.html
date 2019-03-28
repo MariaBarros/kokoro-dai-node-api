@@ -1,0 +1,14 @@
+<div class="{{$ctrl.field.classControl}}" ng-class="{'hidden': ($ctrl.field.lan && $ctrl.field.lan != $ctrl.parent.lan) || $ctrl.field.display == false}">
+    <label>{{$ctrl.field.label}}</label>
+    <textarea data-ui-tinymce aria-label="{{$ctrl.field.label}}" name="{{$ctrl.name}}" 
+        ng-model="$ctrl.item[$ctrl.name]"
+        ng-required="$ctrl.field.is_required" ng-disabled="{{$ctrl.field.disabled}}">
+    </textarea>
+</div>
+<div ng-if="$ctrl.parent.form[$ctrl.name].$invalid">
+    <div ng-messages="!$ctrl.parent.form.parent.$submitted && $ctrl.parent.form[$ctrl.name].$error">
+        <div ng-repeat="err in $ctrl.field.validation" ng-message="{{err.validator}}">
+            <span style="color: red;">{{err.error}}.</span>
+        </div>
+    </div>
+</div>

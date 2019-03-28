@@ -1,0 +1,11 @@
+<div ng-if="($ctrl.field.show_if) ? $ctrl.showIf($ctrl.field.show_if) : true"
+ng-init="$ctrl.item[$ctrl.name] = $ctrl.item[$ctrl.name] || $ctrl.field.default" class="checkboxGroup">
+	<label class="inputLabel">
+    <input type="checkbox" class="{{$ctrl.field.class}}" 
+    ng-click="$ctrl.item[$ctrl.name] = ($ctrl.item[$ctrl.name] == false) ? false : true"     
+    ng-disabled="$ctrl.field.module && !$ctrl.permission.all && !$ctrl.permission.canActivate"
+    ng-model="$ctrl.item[$ctrl.name]">         
+        {{$ctrl.field.label}} ({{$ctrl.item[$ctrl.name]}})
+    </label>
+    
+</div>

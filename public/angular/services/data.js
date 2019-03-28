@@ -2,36 +2,7 @@ angular.module('app').factory('DataFactory', DataFactory);
 DataFactory.$inject = ['$http', '$filter', 'appConfig', '$q'];
 
 function DataFactory ($http, $filter, appConfig, $q) {   
-  let _data = {};
- 
-  _data.getParams = function($routeParams){
-      return $filter('params')($routeParams);    
-  };
-  
-  _data.setFormParams = function(params, item = {}){ 
-    try{   
-      for(let key in params){
-        let el = params[key]      
-        if(!el.value && ((item[key]) || el.reference)){        
-          el.value = (!el.static) ? (item[key].value || item[key]) : (el.reference || '')        
-        }      
-      }
-      return params;
-    }catch(e){
-      return params;
-    }    
-  }
-
-  _data.getStringParams = function(params = [], item){
-    let stringParams = "";
-    params.map((el)=>{
-      if(el.key && item && item[el.key]){
-          let itemStr = "&" + el.key + "=" + (item[el.key].value ? item[el.key].value : item[el.key])
-          if(item[el.key]) stringParams += itemStr
-      }
-    })
-    return stringParams
-  }
+  let _data = {}; 
 
   _data.formatData = function(data){
     return $filter('paramFormat')(data)   

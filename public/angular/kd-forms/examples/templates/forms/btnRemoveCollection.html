@@ -1,0 +1,6 @@
+<button ng-if="!$ctrl.collection.controls && !$ctrl.collection.controls.remove" type="button" 
+    class="btn btn-link pull-right" ng-init="el.deleted = false" title="Delete" 
+    ng-click="el.deleted = !el.deleted"
+    ng-disabled="(!$ctrl.permission.required && !$ctrl.permission.all && !$ctrl.permission.canUpdate) || (el.id && !$ctrl.permission.canDelete && !$ctrl.permission.all)">
+    <span class="glyphicon" ng-class="{'glyphicon-remove': !el.deleted, 'glyphicon-ok': el.deleted == true}"></span>
+</button>

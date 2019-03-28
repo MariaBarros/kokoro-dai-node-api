@@ -1,0 +1,17 @@
+<div ng-if="($ctrl.field.show_if) ? $ctrl.showIf($ctrl.field.show_if) : true">
+    <label>{{$ctrl.field.label}}</label>
+    <md-datepicker  ng-init="$ctrl.item[$ctrl.name] = ($ctrl.item[$ctrl.name] | convertDate)"
+        ng-model="$ctrl.item[$ctrl.name]" 
+        md-min-date="($ctrl.field.minDate) ? $ctrl.item[$ctrl.field.minDate] : ''" 
+        ng-disabled="($ctrl.field.minDate && !$ctrl.item[$ctrl.field.minDate]) || $ctrl.field.disabled == true" 
+        ng-required="$ctrl.field.is_required || false">
+    </md-datepicker>
+    
+    <div ng-if="$ctrl.parent.form[$ctrl.name].$invalid">
+        <div ng-messages="!$ctrl.parent.form.parent.$submitted && $ctrl.parent.form[$ctrl.name].$error">
+            <div ng-repeat="err in $ctrl.field.validation" ng-message="{{err.validator}}">
+                <span style="color: red;">{{err.error}}.</span>
+            </div>
+        </div>
+    </div>                   
+</div>

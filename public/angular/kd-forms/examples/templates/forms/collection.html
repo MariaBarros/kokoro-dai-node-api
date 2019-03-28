@@ -1,0 +1,72 @@
+<div ng-if="($ctrl.field.show_if) ? $ctrl.showIf($ctrl.field.show_if) && (!$ctrl.permission.required || $ctrl.permission.all || $ctrl.permission.canView) : !$ctrl.permission.required || $ctrl.permission.all || $ctrl.permission.canView" ng-init="$ctrl.field.isCollapsed = true">
+
+  <ul class="list-unstyled list-inline">
+    <li><label>{{$ctrl.field.label}}</label></li>
+    <li class="pull-right">
+      <button type="button" class="btn btn-link pull-right"  style="margin-bottom: 10px;"
+        ng-if="$ctrl.field.collapsed == true" ng-click="$ctrl.field.isCollapsed = !$ctrl.field.isCollapsed;">
+        <span ng-if="$ctrl.field.isCollapsed == true">
+          <span class="glyphicon glyphicon-menu-down"></span> Show {{$ctrl.field.collapse_label}}
+        </span>
+        <span ng-if="$ctrl.field.isCollapsed == false">
+          <span class="glyphicon glyphicon-menu-up"></span> Hide {{$ctrl.field.collapse_label}}
+        </span>
+      </button>
+    </li>
+  </ul>             
+
+  <input type="hidden" 
+  ng-required="($ctrl.field.conditional_required) ? $ctrl.execFunction($ctrl.field.conditional_required) : $ctrl.field.is_required" name="{{$ctrl.name}}" ng-model="$ctrl.item[$ctrl.name]">
+
+  <div ng-class="${collapsedClass}">
+    <ul class="list-unstyled list-inline {{$ctrl.collection.class}}" style="display: flex;">
+      <li ng-if="!$ctrl.item[$ctrl.name] || $ctrl.item[$ctrl.name].length == 0">
+        <div class="alert alert-warning" style="margin-bottom: 0;">
+          {{$ctrl.collection.empty_message || 'Empty Collection'}}.
+        </div>
+      </li>
+      <li ng-repeat="el in $ctrl.item[$ctrl.name]">
+        <div class="btn-group" role="group" aria-label="" 
+          ng-class="{'line-through': el.deleted == true}" style="display: flex; align-items: baseline;">          
+
+          <span ng-if="$ctrl.collection.dataLabel" class="complete-label" dyn-labels 
+            labels="$ctrl.collection.dataLabel" source="el" complete-label="el.completeLabel">
+            {{el.completeLabel}}
+          </span>
+          <span ng-if="$ctrl.collection.label" class="container-label" 
+            ng-include="$ctrl.collection.label">
+          </span>
+
+          <span ng-include="'./btnEditCollection.html'"></span>
+          <span ng-include="'./btnRemoveCollection.html'"></span>
+          
+        </div>      
+      </li>   
+      <li ng-if="$ctrl.nestedForm" style="display: flex;">      
+        <span ng-include="'./btnAddCollection.html'"></span>
+      </li>
+    </ul> 
+    
+    <div ng-if="$ctrl.parent.form[$ctrl.name].$invalid">
+        <div ng-messages="!$ctrl.parent.form.parent.$submitted && $ctrl.parent.form[$ctrl.name].$error">
+            <div ng-repeat="err in $ctrl.field.validation" ng-message="{{err.validator}}">
+                <span style="color: red;">{{err.error}}.</span>
+            </div>
+        </div>
+    </div>
+    
+    <div ng-if="$ctrl.nestedForm">    
+      <div ng-if="$ctrl.showForm" 
+        ng-class="{'modal-form': $ctrl.nestedForm.modal == true, 'static-form': !$ctrl.nestedForm.modal || $ctrl.nestedForm.modal == false}">
+        <div>
+          <form-comp form-name="{{$ctrl.nestedForm.form}}" 
+            item="$ctrl.itemCollection" 
+            open="$ctrl.showForm" 
+            options="{redirect: false, router: $ctrl.nestedForm.router, saveBefore: $ctrl.nestedForm.saveBefore || false, multilingual: $ctrl.nestedForm.multilingual || false, title: $ctrl.nestedForm.title}" 
+            on-save="$ctrl.item[$ctrl.name] = $ctrl.parent.add($event, $ctrl.item[$ctrl.name])" >  
+          </form-comp>               
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

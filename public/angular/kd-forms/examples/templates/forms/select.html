@@ -1,0 +1,51 @@
+<label>{{$ctrl.field.label}}</label>
+<!--Required-->
+<input type="hidden" ng-required="$ctrl.field.required" name="{{$ctrl.name}}" ng-model="$ctrl.item[$ctrl.name]">
+<!--/Required-->
+
+<div ng-if="$ctrl.parent.form[$ctrl.name].$invalid">
+    <div ng-messages="!$ctrl.parent.form.parent.$submitted && $ctrl.parent.form[$ctrl.name].$error">
+        <div ng-repeat="err in $ctrl.field.validation" ng-message="{{err.validator}}">
+            <span style="color: red;" ng-if="$ctrl.parent.form[$ctrl.name].$error[err.validator]">{{err.error}}.</span>
+        </div>
+    </div>
+</div>
+
+<div ng-init="$ctrl.edit = false;">
+    <!--Empty collection-->
+    <span ng-if="$ctrl.collection && $ctrl.collection.length == 0" class="alert alert-warning">Sin datos registrados</span>
+    <!--/Empty collection-->
+
+    <!--Control-->
+    <select id="{{$ctrl.name}}" ng-if="$ctrl.collection.length>0 && !$ctrl.edit" ng-model="$ctrl.item[$ctrl.name]" 
+        ng-change="$ctrl.item[$ctrl.name] = $ctrl.selected.id; $ctrl.item[$ctrl.field.caption] = $ctrl.selected[$ctrl.field.caption];"  dyn-attrs
+        ng-options="el as el[$ctrl.field.caption] for el in $ctrl.collection track by el.id">
+        <option value="{}">- Seleccione -</option>
+    </select>
+    <!--/Control-->    
+
+    <span ng-if="$ctrl.field.module && $ctrl.userAllows.all || $ctrl.userAllows.canUpdate == true">        
+        <button type="button" ng-if="$ctrl.edit == false && $ctrl.selected.id" ng-click="$ctrl.edit = true; $ctrl.selected = $ctrl.getItemCollection()" class="btn btn-link bg-color-light-gray btn-form-border">
+            <span class="glyphicon glyphicon-pencil"></span> Editar
+        </button>
+
+        <button ng-if="$ctrl.edit == false" type="button" ng-click="$ctrl.selected = {}; $ctrl.edit = true" class="btn btn-link bg-color-light-gray btn-form-border">
+            <span class="glyphicon glyphicon-plus"></span> Agregar
+        </button>
+        
+        <h4 ng-if="$ctrl.edit == true">Editando</h4>
+    </span>    
+
+    <!--Nested Form-->
+    <div ng-if="$ctrl.edit == true" ng-class="{'modal-form': $ctrl.nestedForm.modal == true, 'static-form': !$ctrl.nestedForm.modal || $ctrl.nestedForm.modal == false}">
+        <div>
+            <form-comp form-name="{{$ctrl.nestedForm.form}}" 
+                item="$ctrl.selected"     
+                open="$ctrl.edit" 
+                options="{redirect: false, router: $ctrl.field.router, saveBefore: $ctrl.nestedForm.saveBefore || true, multilingual: $ctrl.nestedForm.multilingual, title: $ctrl.nestedForm.title}"
+                on-save="$ctrl.parent.select($event, $ctrl.collection, $ctrl.nestedForm.relation); $ctrl.selected = $event.item; $ctrl.item[$ctrl.name] = $event.item.id; $ctrl.item[$ctrl.field.caption] = $event.item[$ctrl.field.caption];">  
+            </form-comp>
+        </div>
+    </div>
+    <!--/Nested Form-->    
+</div>

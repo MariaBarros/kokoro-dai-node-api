@@ -1,0 +1,54 @@
+<html>
+  <head>
+
+    <!-- General Settings -->
+    <meta charset="utf-8">
+    <meta http-equiv="content-language" content="en-us">
+    <!--<base href="/" />-->
+
+    <!-- Meta Tags -->
+    <title>Login Form example</title>
+    <meta name="description" content="Showing the form from json file for login.">
+    <!-- Static Assets -->    
+    <script type="text/javascript" charset="utf-8" src="dist/functions.js"></script>    
+    <script type="text/javascript" charset="utf-8" src="dist/angular.min.js"></script>    
+    <link rel="stylesheet" type="text/css" href="dist/app.css" />
+
+  </head>
+  <body ng-app="app">
+    <!-- Page Wrapper -->
+    <div class="wrapper">
+      <!-- Header -->
+      <div class="header">        
+        <div class="clear"></div>
+      </div>
+
+      <!-- Page-Specific Content -->
+      <div class="content">
+        <h1>Login Example</h1>
+        <h2>Showing the form from json file for login</h2>
+
+        <div class="formWrapper">  
+          <form-comp form-name="LoginForm"
+            options="{request: {method: 'POST', url: '/'}, 
+            buttons: {
+              submit: {label: 'Login', class:'cta blue'}
+            }}">
+          </form-comp>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="footer">
+        <div class="copyright">Form Module - Angular 1.5 | Kodoro Dai Project</div>
+      </div>
+    </div>
+  </body>
+  <script type="text/javascript" charset="utf-8" src="../src/providers/form.js"></script>      
+  <script type="text/javascript" charset="utf-8" src="../src/services/form.js"></script>  
+  <script type="text/javascript" charset="utf-8" src="../src/components/form.js"></script>  
+  <script type="text/javascript" charset="utf-8" src="../src/components/message.js"></script>      
+  <script type="text/javascript" charset="utf-8" src="../src/directives/dyn-attrs.js"></script>
+  <script type="text/javascript" charset="utf-8" src="app.js"></script>  
+    
+</html>

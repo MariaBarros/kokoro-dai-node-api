@@ -1,0 +1,57 @@
+{"fields":[
+	{
+		"name": "username",
+		"type": "varchar",		
+		"required": true,
+		"class": "inputGroup",
+		"pattern":"^(\\w[\\._]*)+@[a-zA-Z_]+?\\.[a-zA-Z]{2,3}(\\.[a-zA-Z]{2,3})?$",
+		"label":"Username",	
+		"disabled":"$ctrl.item.id",	
+		"dyns":[			
+			{"name":"check-duplicate", "value": {"path":"api/users", "param":"username"} }
+		],
+		"validation":[
+			{"validator":"required", "error":"Enter your username"},
+			{"validator":"pattern", "error":"The username must be a valid email"},
+			{"validator": "checkDuplicate","error":"The username already exist"}
+		]
+	},
+	{
+		"name": "password",
+		"type": "varchar", 
+		"required": true, 
+		"class": "inputGroup",
+		"label":"Password",		
+		"dyns":[
+			{"name": "type", "value": "password"}			
+		],
+		"validation":[			
+			{"validator": "required","error":"Enter your password"}			
+		]
+	},
+	{
+		"name": "password_bis",
+		"type": "varchar", 
+		"required": true, 
+		"class": "inputGroup",
+		"label":"Repeat Password",		
+		"dyns":[
+			{"name": "type", "value": "password"},
+			{"name":"compare", "value": "equal"},
+			{"name":"match-value", "value":"password"},
+			{"name":"ng-model-options", "value": "{'updateOn': 'blur'}"}
+		],
+		"validation":[			
+			{"validator": "matchValue","error":"Passwods do not match"},
+			{"validator": "required","error":"Repeat the password"}			
+		]
+	},
+	{
+		"name":"agree",
+		"label": "I agree the Terms & Conditions",
+		"type": "checkbox",
+		"default": true
+	}
+
+	]
+}

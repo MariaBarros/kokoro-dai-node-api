@@ -1,0 +1,87 @@
+<input type="hidden" ng-required="$ctrl.field.is_required"  name="{{$ctrl.name}}" ng-model="$ctrl.item[$ctrl.name]">
+
+<div class="row" style="padding-top: 10px; padding-bottom: 10px;"
+  ng-if="($ctrl.field.show_if) ? $ctrl.showIf($ctrl.field.show_if) && (!$ctrl.permission.required || $ctrl.permission.all || $ctrl.permission.canView) : !$ctrl.permission.required || $ctrl.permission.all || $ctrl.permission.canView">
+  <div class="col-xs-12">
+    <button type="button" class="btn btn-link pull-right"  style="margin-bottom: 10px;"
+      ng-if="$ctrl.field.collapsed == true" ng-click="$ctrl.field.isCollapsed = !$ctrl.field.isCollapsed;">
+      <span ng-if="$ctrl.field.isCollapsed == true">
+        <span class="glyphicon glyphicon-menu-down"></span> Show {{$ctrl.field.collapse_label}}
+      </span>
+      <span ng-if="$ctrl.field.isCollapsed == false">
+        <span class="glyphicon glyphicon-menu-up"></span> Hide {{$ctrl.field.collapse_label}}
+      </span>
+    </button>
+  </div>
+  <div ng-class="${collapsedClass}">
+    <label>{{$ctrl.field.label}}</label>    
+    <!--Empty Collection-->   
+    <div class="alert alert-warning" ng-if="!$ctrl.item[$ctrl.name] || $ctrl.item[$ctrl.name].length == 0">
+      {$ctrl.collection.empty_message || 'Empty Collection'}}
+    </div>
+    <!--/Empty Collection-->
+    <span ng-if="$ctrl.field.customTemplate && $ctrl.item[$ctrl.name].length > 0">
+      <div ng-repeat="el in $ctrl.item[$ctrl.name]" style="padding-top: 10px; padding-bottom: 10px;">
+        <div ng-include="$ctrl.field.customTemplate"></div>
+      </div>      
+    </span>                        
+    <table class="table table-bordered" ng-if="$ctrl.item[$ctrl.name].length > 0 && !$ctrl.field.customTemplate">
+      <tr class="table-header" ng-if="$ctrl.collection.header">
+        <td ng-repeat="header in $ctrl.collection.header">{{header}}</td>
+        <td>Action</td>     
+      </tr>     
+      <tr class="table-content" ng-repeat="el in $ctrl.item[$ctrl.name]">
+        <td ng-repeat="label in $ctrl.collection.dataLabel" class="{{label.class}}" 
+          ng-class="{'line-through': el.deleted == true}">
+          <span ng-if="!label.filter && !label.collection">{{el[label.reference]}}</span>
+          <!--<span ng-if="label.filter" ng-switch on="label.filter">
+            <span ng-switch-when="asDate">{{el[label.reference] | asDate}}</span>
+            <span ng-switch-when="date">{{el[label.reference] | date: 'dd/MM/yyyy'}}</span>
+            <span ng-switch-when="datetime">{{el[label.reference] | date: 'dd/MM/yyyy HH:mm'}}hs</span>
+            <span ng-switch-when="price">$ {{el[label.reference] || 0}}</span>
+            <span ng-switch-when="filterHour">{{el[label.reference] | filterHour}}hs</span>
+            <span ng-switch-when="sbool">
+              <span ng-if="!label.valueForTrue">{{el[label.reference] | sbool}}</span>
+              <span ng-if="label.valueForTrue">
+                {{el[label.reference] | sbool:label.valueForTrue:label.valueForFalse}}</span>
+              </span>
+          </span>-->
+         <ul ng-if="label.collection == true && label.dataLabel && el[label.reference].length>0" 
+            class="list-unstyled {{label.class}}">              
+            <li ng-repeat="elCol in el[label.reference]">
+              <span ng-if="label.dataLabel" dyn-labels labels="label.dataLabel" source="elCol" complete-label="elCol.completeLabel">
+                {{elCol.completeLabel}}
+              </span>
+            </li>
+          </ul>
+          <span ng-if="label.collection == true && label.label && el[label.reference].length>0" class="list-unstyled {{label.class}}" ng-include="label.label">
+          </span>
+        </td>
+        <td>
+          <span ng-include="'./btnEditCollection.html'"></span>
+          <span ng-include="'./btnRemoveCollection.html'"></span>
+        </td>
+      </tr>     
+    </table>
+    <span ng-include="'./btnAddCollection.html'"></span>
+  </div>
+</div>
+
+<div ng-if="$ctrl.parent.form[$ctrl.name].$invalid">
+  <div ng-messages="!$ctrl.parent.form.parent.$submitted && $ctrl.parent.form[$ctrl.name].$error">
+    <div ng-repeat="err in $ctrl.field.validation" ng-message="{{err.validator}}">
+      <span style="color: red;">{{err.error}}.</span>
+    </div>
+  </div>
+</div>
+
+<div ng-if="$ctrl.showForm" ng-class="{'modal-form': $ctrl.nestedForm.modal == true, 'static-form': !$ctrl.nestedForm.modal || $ctrl.nestedForm.modal == false}">
+  <div>
+    <form-comp form-name="{{$ctrl.nestedForm.form}}" 
+      item="$ctrl.itemCollection" 
+      open="$ctrl.showForm" 
+      options="{redirect: false, router: $ctrl.nestedForm.router, saveBefore: false, multilingual: $ctrl.collection.multilingual, title: $ctrl.nestedForm.title}" 
+      on-save="$ctrl.item[$ctrl.name] = $ctrl.parent.add($event, $ctrl.item[$ctrl.name])" >  
+    </form-comp>               
+  </div>
+</div>

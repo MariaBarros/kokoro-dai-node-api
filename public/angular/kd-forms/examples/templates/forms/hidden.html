@@ -1,0 +1,9 @@
+<input name="{{$ctrl.name}}" ng-model="$ctrl.item[$ctrl.name]" ng-required="$ctrl.field.is_required">
+
+<div ng-if="$ctrl.parent.form[$ctrl.name].$invalid">
+    <div ng-messages="!$ctrl.parent.form.parent.$submitted && $ctrl.parent.form[$ctrl.name].$error">
+        <div ng-repeat="err in $ctrl.field.validation" ng-message="{{err.validator}}">
+            <span style="color: red;">{{err.error}}.</span>
+        </div>
+    </div>
+</div>
