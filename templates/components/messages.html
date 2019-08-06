@@ -1,6 +1,0 @@
-<div ng-repeat="message in $ctrl.messages">
-  <div class="alert alert-{{message.type}} text-center mess-comp" id="mess_{{$index}}" role="alert">     
-      <span class="glyphicon" ng-class="{'glyphicon-ok-sign': mess.type=='success', 'glyphicon-exclamation-sign': mess.type=='danger'}"></span> 
-      {{message.description | destroy:message:$index}}      
-  </div>  
-</div>
