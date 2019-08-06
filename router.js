@@ -5,7 +5,6 @@ const _user = require('./lib/handlers/user');
 const _token = require('./lib/handlers/token');
 const _check = require('./lib/handlers/check');
 const _web = require('./lib/handlers/web');
-const _cart = require('./lib/handlers/cart');
 
 const errorHandlers = {
   notFound: function(data, response) {
@@ -26,8 +25,7 @@ const routerPaths = {
   'checks/edit': _web.checksEdit,
   'api/users': _user.handlers,
   'api/tokens': _token.handlers,
-  'api/checks': _check.handlers,
-  'api/carts' : _cart.handlers,
+  'api/checks': _check.handlers,  
   'favicon.ico' : _web.favicon,
   'public' : _web.public
 };
@@ -44,7 +42,7 @@ const router = {};
 
 router.route = function(path, data, res) {
   // Check the router for a matching path for a handler. If one is not found, use the notFound handler instead.
-  var chosenHandler = typeof(routerPaths[path]) !== 'undefined' ? routerPaths[path] : errorHandlers.notFound;
+  let chosenHandler = typeof(routerPaths[path]) !== 'undefined' ? routerPaths[path] : errorHandlers.notFound;
   
   // If the request is within the public directory use to the public handler instead
   chosenHandler = path.indexOf('public/') > -1 ? _web.public : chosenHandler;

@@ -1,6 +1,0 @@
-<button ng-if="$ctrl.nestedForm && !$ctrl.collection.controls.edit" type="button" 
-    class="btn btn-link pull-right" title="Edit" 
-    ng-disabled="el.delete == true || !$ctrl.nestedForm || (!$ctrl.permission.required && !$ctrl.permission.all && !$ctrl.permission.canUpdate)"
-    ng-click="el.$index = $index; $ctrl.itemCollection = el; $ctrl.showForm = true;">
-    <span class="glyphicon glyphicon-edit"></span>            
-</button>

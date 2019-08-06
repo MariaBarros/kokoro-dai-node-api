@@ -27,6 +27,10 @@ app.loadDataOnPage = function(){
     app.setUsernameFromToken(app.config.sessionToken);  
   };
 
+  pages.checksCreate = ()=>{
+    app.setUsernameFromToken(app.config.sessionToken);  
+  }
+
   if(primaryClass && pages[primaryClass])
     pages[primaryClass]();
   
